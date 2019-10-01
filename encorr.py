@@ -10,7 +10,7 @@ import numpy as np
 from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet
 from ENCORR_cut_out import get_stoi
-from ENCORR_cross_correlate import get_cch_for_all_neurons, create_cch_struct
+from ENCORR_cross_correlate import get_cch_for_all_neurons, write_to_ccg
 
 
 def main():
@@ -71,9 +71,9 @@ def main():
         cch_exp_new, num_ref_spikes_exp_new = get_cch_for_all_neurons(options.ref_tet_id, options.tar_tet_id, ref_spiketimes_exp_new, tar_spiketimes_exp_new, 'exp_new',
                                                                       options.binsize, options.windowsize, options.border_correction)
 
-        logging.info('# Create CCH struct')
-        cch_collection = create_cch_struct(options.ref_tet_id, options.tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new,
-                                           num_ref_spikes_baseline, num_ref_spikes_study, num_ref_spikes_exp_old, num_ref_spikes_exp_new)
+        logging.info('# Write CCH to file')
+        write_to_ccg(options.ref_tet_id, options.tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new,
+                     num_ref_spikes_baseline, num_ref_spikes_study, num_ref_spikes_exp_old, num_ref_spikes_exp_new, options.outfile)
 
 
 

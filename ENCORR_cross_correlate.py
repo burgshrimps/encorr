@@ -5,7 +5,7 @@ import numpy as np
 import logging
 
 
-class CCH:
+class CorrelationRecord:
 
     def __init__(self, ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases):
         self.ref_tet = ref_tet
@@ -14,6 +14,21 @@ class CCH:
         self.tar_neur = tar_neur
         self.format = fmt
         self.phases = phases
+
+
+class CorrelationFile:
+
+    def __init__(self, outfile):
+        self.outfile = outfile
+        self.f = open(self.outfile, 'w')
+
+    def write(self, corr_rec):
+        phases_as_string = ''
+        for phase in corr_rec.phases:
+            phases_as_string += np.array2string(phase['CH'], max_line_width=1000000) + ':' + str(phase['RS']) + '\t'
+        corr_line = 'tet{0}\t{1}\ttet{2}\t{3}\t{4}\t{5}\n'.format(corr_rec.ref_tet, corr_rec.ref_neur+1, corr_rec.tar_tet, corr_rec.tar_neur+1, corr_rec.format, phases_as_string)
+        self.f.write(corr_line)
+
 
 
 def list2neo(st1, st2):
@@ -59,30 +74,36 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
             num_ref_spikes_all_neurons[(rn, tn)] = neuron_num_ref_spikes
     return cch_all_neurons, num_ref_spikes_all_neurons
 
-def create_cch_struct(ref_tet_id, tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
-                      ref_spk_exp_old, ref_spk_exp_new):
-    cch_collection = dict()
+
+def write_to_ccg(ref_tet_id, tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
+                 ref_spk_exp_old, ref_spk_exp_new, outfile):
+    ccg_out = CorrelationFile(outfile)
     fmt = 'CH:RS'
     for neur_pair in sorted(cch_baseline):
         phases = []
+
         baseline_info = dict()
         baseline_info['CH'] = cch_baseline[neur_pair]
         baseline_info['RS'] = ref_spk_baseline[neur_pair]
         phases.append(baseline_info)
+
         study_info = dict()
         study_info['CH'] = cch_study[neur_pair]
         study_info['RS'] = ref_spk_study[neur_pair]
         phases.append(study_info)
+
         exp_old_info = dict()
         exp_old_info['CH'] = cch_exp_old[neur_pair]
         exp_old_info['RS'] = ref_spk_exp_old[neur_pair]
         phases.append(exp_old_info)
+
         exp_new_info = dict()
         exp_new_info['CH'] = cch_exp_new[neur_pair]
         exp_new_info['RS'] = ref_spk_exp_new[neur_pair]
         phases.append(exp_new_info)
-        cch_collection[neur_pair] = CCH(ref_tet_id, neur_pair[0], tar_tet_id, neur_pair[1], fmt, phases)
-    return cch_collection
+
+        corr_rec = CorrelationRecord(ref_tet_id, neur_pair[0], tar_tet_id, neur_pair[1], fmt, phases)
+        ccg_out.write(corr_rec)
         
 
         
