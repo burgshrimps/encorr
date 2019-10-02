@@ -124,10 +124,6 @@ def write_to_ccg(ref_tet_id, tar_tet_id, cch_baseline, cch_study, cch_exp_old, c
         corr_rec = CorrelationRecord(ref_tet_id, neur_pair[0], tar_tet_id, neur_pair[1], fmt, phases)
         ccg_out.write(corr_rec)
 
-
-def read_from_ccg(infile):
-    ccg_in = CorrelationFile(infile, 'r')
-
         
 
         

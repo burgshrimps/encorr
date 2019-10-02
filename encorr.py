@@ -75,6 +75,10 @@ def main():
         write_to_ccg(options.ref_tet_id, options.tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new,
                      num_ref_spikes_baseline, num_ref_spikes_study, num_ref_spikes_exp_old, num_ref_spikes_exp_new, options.outfile)
 
+    if options.sub == 'call':
+        logging.info('MODE: call')
+        logging.info('INPUT CCG FILE: {0}'.format(options.ccg))
+        logging.info('OUTPUT CCF FILE: {0}'.format(options.outfile))
 
 
 
