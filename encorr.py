@@ -10,7 +10,7 @@ import numpy as np
 from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet
 from ENCORR_cut_out import get_stoi
-from ENCORR_cross_correlate import get_cch_for_all_neurons, write_to_ccg
+from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
 
 
 def main():

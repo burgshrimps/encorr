@@ -18,19 +18,38 @@ class CorrelationRecord:
 
 class CorrelationFile:
 
-    def __init__(self, outfile):
+    def __init__(self, outfile, read_write):
         self.outfile = outfile
-        self.f = open(self.outfile, 'w')
+        self.f = open(self.outfile, read_write)
 
     def write(self, corr_rec):
         phases_as_string = ''
         for phase in corr_rec.phases:
             phases_as_string += np.array2string(phase['CH'], max_line_width=1000000) + ':' + str(phase['RS']) + '\t'
-        corr_line = 'tet{0}\t{1}\ttet{2}\t{3}\t{4}\t{5}\n'.format(corr_rec.ref_tet, corr_rec.ref_neur+1, corr_rec.tar_tet, corr_rec.tar_neur+1, corr_rec.format, phases_as_string)
+        corr_line = 'tet{0}\t{1}\ttet{2}\t{3}\t{4}\t{5}\n'.format(corr_rec.ref_tet, corr_rec.ref_neur+1, corr_rec.tar_tet, corr_rec.tar_neur+1, ':'.join(corr_rec.format), phases_as_string)
         self.f.write(corr_line)
 
+    def parse_line(self, line):
+        fields = line.split('\t')
+        ref_tet = fields[0]
+        ref_neur = fields[1]
+        tar_tet = fields[2]
+        tar_neur = fields[3]
+        fmt = fields[4].split(':')
+        phases_as_string = fields[5:]
+        phases = []
+        for phase_as_str in phases_as_string:
+            phase_dict = dict()
+            phase_dict['CH'] = np.fromstring(phase_as_str.split(':')[0][1:-1], sep=' ', dtype=int)
+            phase_dict['RS'] = int(phase_as_str.split(':')[1])
+            phases.append(phase_dict)
+        return CorrelationRecord(ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases)
+        
+    def fetch(self):
+        for line in self.f.readlines():
+            yield self.parse_line(line.strip())
 
-
+            
 def list2neo(st1, st2):
     """ Converts two lists of spike times into neo.Spiketrain objects. """
     t_stop = max(max(st1), max(st2)) + 1
@@ -77,8 +96,8 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
 
 def write_to_ccg(ref_tet_id, tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
                  ref_spk_exp_old, ref_spk_exp_new, outfile):
-    ccg_out = CorrelationFile(outfile)
-    fmt = 'CH:RS'
+    ccg_out = CorrelationFile(outfile, 'w')
+    fmt = ['CH', 'RS']
     for neur_pair in sorted(cch_baseline):
         phases = []
 
@@ -104,6 +123,11 @@ def write_to_ccg(ref_tet_id, tar_tet_id, cch_baseline, cch_study, cch_exp_old, c
 
         corr_rec = CorrelationRecord(ref_tet_id, neur_pair[0], tar_tet_id, neur_pair[1], fmt, phases)
         ccg_out.write(corr_rec)
+
+
+def read_from_ccg(infile):
+    ccg_in = CorrelationFile(infile, 'r')
+
         
 
         
