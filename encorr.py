@@ -11,6 +11,7 @@ from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet
 from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
+from ENCORR_call import get_candidates, call_peaks
 
 
 def main():
@@ -79,6 +80,19 @@ def main():
         logging.info('MODE: call')
         logging.info('INPUT CCG FILE: {0}'.format(options.ccg))
         logging.info('OUTPUT CCF FILE: {0}'.format(options.outfile))
+        ccg_in = CorrelationFile(options.ccg, 'r')
+        for rec in ccg_in.fetch():
+            cch_all_phases = np.zeros(len(rec.phases[0]['CH']), dtype=int)
+            cch_all_phases_norm = np.zeros(len(rec.phases[0]['CH']), dtype=float)
+            for phase in rec.phases:
+                cch_all_phases = np.vstack((cch_all_phases, phase['CH']))
+                cch_all_phases_norm = np.vstack((cch_all_phases_norm, phase['CH'] / phase['RS']))
+            cch_all_phases = cch_all_phases[1:,:]
+            cch_all_phases_norm = cch_all_phases_norm[1:,:]
+            peak_candidates, trough_candidates = get_candidates(cch_all_phases_norm, options.peak_thr, options.trough_thr)
+            peaks = call_peaks(cch_all_phases, peak_candidates, options.peak_min_spikes, options.center)
+            
+
 
 
 

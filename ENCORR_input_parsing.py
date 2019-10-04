@@ -62,6 +62,28 @@ def parse_arguments(arguments = sys.argv[1:]):
       parser_call.add_argument('outfile',
                                 type=str,
                                 help='Output .ccf file.')
+      parser_call.add_argument('--peak_thr',
+                                metavar='INT',
+                                type=int,
+                                default=4,
+                                help='Number of standard deviations above the mean the firing probability has to be to be considered \
+                                      for peak calling')
+      parser_call.add_argument('--trough_thr',
+                                metavar='INT',
+                                type=int,
+                                default=3,
+                                help='Number of standard deviations below the mean the firing probability has to be to be considered \
+                                      for trough calling')
+      parser_call.add_argument('--peak_min_spikes',
+                                metavar='INT',
+                                type=int,
+                                default=2.5,
+                                help='Number of spikes a peak has to contain at least.')
+      parser_call.add_argument('--center',
+                                metavar='INT',
+                                type=int,
+                                default=5,
+                                help='Number of bins around the center bin of the CCH to be considered the region of interest.')
       
 
-    return parser.parse_args(arguments)
+      return parser.parse_args(arguments)
