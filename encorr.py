@@ -11,7 +11,7 @@ from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet
 from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
-from ENCORR_call import get_candidates, call_peaks
+from ENCORR_call import get_candidates, call_peaks, call_troughs
 
 
 def main():
@@ -80,6 +80,11 @@ def main():
         logging.info('MODE: call')
         logging.info('INPUT CCG FILE: {0}'.format(options.ccg))
         logging.info('OUTPUT CCF FILE: {0}'.format(options.outfile))
+        logging.info('PEAK THRESHOLD: {0}'.format(options.peak_thr))
+        logging.info('TROUGH THRESHOLD: {0}'.format(options.trough_thr))
+        logging.info('PEAK MIN SPIKES: {0}'.format(options.peak_min_spikes))
+        logging.info('TROUGH NEIGHBOUR MIN SPIKES: {0}'.format(options.trough_min_spikes))
+        logging.info('CENTER RANGE: +-{0} BINS'.format(options.center))
         ccg_in = CorrelationFile(options.ccg, 'r')
         for rec in ccg_in.fetch():
             cch_all_phases = np.zeros(len(rec.phases[0]['CH']), dtype=int)
@@ -91,7 +96,8 @@ def main():
             cch_all_phases_norm = cch_all_phases_norm[1:,:]
             peak_candidates, trough_candidates = get_candidates(cch_all_phases_norm, options.peak_thr, options.trough_thr)
             peaks = call_peaks(cch_all_phases, peak_candidates, options.peak_min_spikes, options.center)
-            
+            troughs = call_troughs(cch_all_phases, trough_candidates, options.trough_min_spikes, options.center)
+            print(troughs)
 
 
 

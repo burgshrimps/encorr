@@ -77,8 +77,13 @@ def parse_arguments(arguments = sys.argv[1:]):
       parser_call.add_argument('--peak_min_spikes',
                                 metavar='INT',
                                 type=int,
-                                default=2.5,
+                                default=3,
                                 help='Number of spikes a peak has to contain at least.')
+      parser_call.add_argument('--trough_min_spikes',
+                                metavar='INT',
+                                type=int,
+                                default=3,
+                                help='Number of spikes a the +- 2 neighbouring bins of a trough have to contain at least.')
       parser_call.add_argument('--center',
                                 metavar='INT',
                                 type=int,
