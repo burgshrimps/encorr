@@ -31,10 +31,10 @@ class CorrelationFile:
 
     def parse_line(self, line):
         fields = line.split('\t')
-        ref_tet = fields[0]
-        ref_neur = fields[1]
-        tar_tet = fields[2]
-        tar_neur = fields[3]
+        ref_tet = int(fields[0][3:])
+        ref_neur = int(fields[1])
+        tar_tet = int(fields[2][3:])
+        tar_neur = int(fields[3])
         fmt = fields[4].split(':')
         phases_as_string = fields[5:]
         phases = []

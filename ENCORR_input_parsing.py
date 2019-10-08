@@ -71,7 +71,7 @@ def parse_arguments(arguments = sys.argv[1:]):
       parser_call.add_argument('--trough_thr',
                                 metavar='INT',
                                 type=int,
-                                default=3,
+                                default=-3,
                                 help='Number of standard deviations below the mean the firing probability has to be to be considered \
                                       for trough calling')
       parser_call.add_argument('--peak_min_spikes',
@@ -79,7 +79,7 @@ def parse_arguments(arguments = sys.argv[1:]):
                                 type=int,
                                 default=3,
                                 help='Number of spikes a peak has to contain at least.')
-      parser_call.add_argument('--trough_min_spikes',
+      parser_call.add_argument('--trough_neighbours_min_spikes',
                                 metavar='INT',
                                 type=int,
                                 default=3,

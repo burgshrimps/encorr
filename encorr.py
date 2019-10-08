@@ -11,7 +11,7 @@ from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet
 from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
-from ENCORR_call import get_candidates, call_peaks, call_troughs
+from ENCORR_call import ConnectionFile, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records_firing_prob
 
 
 def main():
@@ -53,14 +53,14 @@ def main():
         tar_tet = loadtet(options.indir, options.tar_tet_id, options.sampling_rate)
 
         logging.info('# Cut out spiketrains of interest')
-        ref_spiketimes_baseline = get_stoi(ref_tet, P, 'baseline')[:4]
-        ref_spiketimes_study = get_stoi(ref_tet, P, 'study')[:4]
-        ref_spiketimes_exp_old = get_stoi(ref_tet, P, 'exp_old')[:4]
-        ref_spiketimes_exp_new = get_stoi(ref_tet, P, 'exp_new')[:4]
-        tar_spiketimes_baseline = get_stoi(tar_tet, P, 'baseline')[:4]
-        tar_spiketimes_study = get_stoi(tar_tet, P, 'study')[:4]
-        tar_spiketimes_exp_old = get_stoi(tar_tet, P, 'exp_old')[:4]
-        tar_spiketimes_exp_new = get_stoi(tar_tet, P, 'exp_new')[:4]
+        ref_spiketimes_baseline = get_stoi(ref_tet, P, 'baseline')#[:4]
+        ref_spiketimes_study = get_stoi(ref_tet, P, 'study')#[:4]
+        ref_spiketimes_exp_old = get_stoi(ref_tet, P, 'exp_old')#[:4]
+        ref_spiketimes_exp_new = get_stoi(ref_tet, P, 'exp_new')#[:4]
+        tar_spiketimes_baseline = get_stoi(tar_tet, P, 'baseline')#[:4]
+        tar_spiketimes_study = get_stoi(tar_tet, P, 'study')#[:4]
+        tar_spiketimes_exp_old = get_stoi(tar_tet, P, 'exp_old')#[:4]
+        tar_spiketimes_exp_new = get_stoi(tar_tet, P, 'exp_new')#[:4]
 
         logging.info('# Cross-correlate spiketrains of interest')
         cch_baseline, num_ref_spikes_baseline = get_cch_for_all_neurons(options.ref_tet_id, options.tar_tet_id, ref_spiketimes_baseline, tar_spiketimes_baseline, 'baseline',
@@ -83,9 +83,12 @@ def main():
         logging.info('PEAK THRESHOLD: {0}'.format(options.peak_thr))
         logging.info('TROUGH THRESHOLD: {0}'.format(options.trough_thr))
         logging.info('PEAK MIN SPIKES: {0}'.format(options.peak_min_spikes))
-        logging.info('TROUGH NEIGHBOUR MIN SPIKES: {0}'.format(options.trough_min_spikes))
+        logging.info('TROUGH NEIGHBOURS MIN SPIKES: {0}'.format(options.trough_neighbours_min_spikes))
         logging.info('CENTER RANGE: +-{0} BINS'.format(options.center))
         ccg_in = CorrelationFile(options.ccg, 'r')
+        ccf_out = ConnectionFile(options.outfile, 'w')
+        ccf_out.write_header(options.ccg, options.peak_thr, options.trough_thr, options.peak_min_spikes, options.trough_neighbours_min_spikes, options.center)
+        logging.info('# Call Connections')
         for rec in ccg_in.fetch():
             cch_all_phases = np.zeros(len(rec.phases[0]['CH']), dtype=int)
             cch_all_phases_norm = np.zeros(len(rec.phases[0]['CH']), dtype=float)
@@ -94,10 +97,19 @@ def main():
                 cch_all_phases_norm = np.vstack((cch_all_phases_norm, phase['CH'] / phase['RS']))
             cch_all_phases = cch_all_phases[1:,:]
             cch_all_phases_norm = cch_all_phases_norm[1:,:]
+
             peak_candidates, trough_candidates = get_candidates(cch_all_phases_norm, options.peak_thr, options.trough_thr)
-            peaks = call_peaks(cch_all_phases, peak_candidates, options.peak_min_spikes, options.center)
-            troughs = call_troughs(cch_all_phases, trough_candidates, options.trough_min_spikes, options.center)
-            print(troughs)
+            peaks_idx = call_peaks(cch_all_phases, peak_candidates, options.peak_min_spikes, options.center)
+            troughs_idx = call_troughs(cch_all_phases, trough_candidates, options.trough_neighbours_min_spikes, options.center)
+
+            phases_rec = create_phase_records_firing_prob(cch_all_phases_norm, peaks_idx, troughs_idx)
+            conn_rec = ConnectionRecord(rec.ref_tet, rec.ref_neur, rec.tar_tet, rec.tar_neur, 'TP:BN:IN', phases_rec)
+            if conn_rec.phases != [[], [], [], []]:  
+                ccf_out.write(conn_rec)
+        
+    #if options.sub == 'correlogram':
+
+
 
 
 
