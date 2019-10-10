@@ -9,16 +9,36 @@ class ConnectionRecord:
         self.ref_neur = ref_neur
         self.tar_tet = tar_tet
         self.tar_neur = tar_neur
-        self.format = fmt
+        self.format = [f['ID'] for f in fmt]
         self.phases = phases
+
+
+class ConnectionHeader:
+
+    def __init__(self, ccg, peak_thr, trough_thr, peak_min_spikes, trough_neighbours_min_spikes, center, fmt, col_names):
+        self.ccg = ccg
+        self.peak_thr = peak_thr
+        self.trough_thr = trough_thr
+        self.peak_min_spikes = peak_min_spikes
+        self.trough_neighbours_min_spikes = trough_neighbours_min_spikes
+        self.center = center
+        self.format = fmt
+        self.col_names = col_names
 
 
 class ConnectionFile:
 
-    def __init__(self, outfile, read_write):
-        self.outfile = outfile
-        self.f = open(self.outfile, read_write)
+    def __init__(self, file, read_write, header=None):
+        self.file = file
+        self.header = header
+        self.f = open(self.file, read_write)
 
+        if read_write == 'w' and self.header != None:
+            self.write_header(self.header)
+
+        elif read_write == 'r':
+            self.header = self.read_header()
+        
     def phases_rec_to_str(self, phases_rec):
         all_phases_as_str = ''
         for phase in phases_rec:
@@ -31,17 +51,17 @@ class ConnectionFile:
                 all_phases_as_str += phase_str[:-1] + '\t'
         return all_phases_as_str[:-1]
 
-    def write_header(self, ccg, peak_thr, trough_thr, peak_min_spikes, trough_neighbours_min_spikes, center):
-        self.f.write('##ccg={0}\n'.format(ccg))
-        self.f.write('##peak_thr={0}\n'.format(peak_thr))
-        self.f.write('##trough_thr={0}\n'.format(trough_thr))
-        self.f.write('##peak_min_spikes={0}\n'.format(peak_min_spikes))
-        self.f.write('##trough_neighbours_min_spikes={0}\n'.format(trough_neighbours_min_spikes))
-        self.f.write('##center={0}\n'.format(center))
-        self.f.write('##FORMAT=<ID=TP,Description="Connection Type">\n')
-        self.f.write('##FORMAT=<ID=BN,Description="Correlogram Bin">\n')
-        self.f.write('##FORMAT=<ID=IN,Description="Intensity">\n')
-        self.f.write('#REFTET\tREFNEUR\tTARTET\tTARNEUR\tFORMAT\tBASE\tSTUDY\tEXPOLD\tEXPNEW\n')
+    def write_header(self, header):
+        self.f.write('##ccg={0}\n'.format(header.ccg))
+        self.f.write('##peak_thr={0}\n'.format(header.peak_thr))
+        self.f.write('##trough_thr={0}\n'.format(header.trough_thr))
+        self.f.write('##peak_min_spikes={0}\n'.format(header.peak_min_spikes))
+        self.f.write('##trough_neighbours_min_spikes={0}\n'.format(header.trough_neighbours_min_spikes))
+        self.f.write('##center={0}\n'.format(header.center))
+        for fmt in header.format:
+            self.f.write('##FORMAT=<ID={0},Description="{1}">\n'.format(fmt['ID'], fmt['DS']))
+        col_names_line = '\t'.join(header.col_names)
+        self.f.write('#' + col_names_line + '\n')
 
     def write(self, conn_rec):
         phases_as_str = self.phases_rec_to_str(conn_rec.phases)
@@ -49,9 +69,69 @@ class ConnectionFile:
                                                       conn_rec.ref_neur,
                                                       conn_rec.tar_tet,
                                                       conn_rec.tar_neur,
-                                                      conn_rec.format,
+                                                      ':'.join(conn_rec.format),
                                                       phases_as_str)
         self.f.write(conn_line)
+    
+    def read_header(self):
+        fmt = []
+        for line in self.file.readlines():
+            if line.startswith('#'):
+                if line.startswith('##'):
+                    line_splitted = line.strip().split('=')
+                    if line_splitted[0][2:] == 'ccg':
+                        ccg = line_splitted[1]
+                    elif line_splitted[0][2:] == 'peak_thr':
+                        peak_thr = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'trough_thr':
+                        trough_thr = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'peak_min_spikes':
+                        peak_min_spikes = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'trough_neighbours_min_spikes':
+                        trough_neighbours_min_spikes = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'center':
+                        center = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'FORMAT':
+                        fmt_id = line.strip.split(',')[0][-2:]
+                        fmt_ds = line.strip.split('"')[1]
+                        fmt.append({'ID' : fmt_id, 'DS' : fmt_ds})
+                else:
+                    col_names = line[1:].strip().split('\t')
+            else:
+                break
+        
+        return ConnectionHeader(ccg, peak_thr, trough_thr, peak_min_spikes, trough_neighbours_min_spikes, center, fmt, col_names)
+
+
+    def parse_line(self, line):
+        fields = line.split('\t')
+        ref_tet = int(fields[0][3:])
+        ref_neur = int(fields[1])
+        tar_tet = int(fields[2][3:])
+        tar_neur = int(fields[3])
+        fmt = fields[4].split(':')
+        phases_as_string = fields[5:]
+        phases = []
+        for phase_as_str in phases_as_string:
+            conn_in_phase = []
+            phase_as_str_splitted = phase_as_str.split(':')
+            idx = np.arange(0, len(phase_as_str_splitted)+1, 3)
+            num_conn = int(len(phase_as_str_splitted) / 3)
+            for i in range(num_conn):
+                try:
+                    conn_in_phase.append({'TP' : phase_as_str_splitted[idx[i]:idx[i+1]][0], 
+                                          'BN' : phase_as_str_splitted[idx[i]:idx[i+1]][1],
+                                          'IN' : phase_as_str_splitted[idx[i]:idx[i+1]][2]})
+                except ValueError:
+                    conn_in_phase.append({'TP' : '.', 
+                                          'BN' : '.',
+                                          'IN' : '.'})
+            phases.append(conn_in_phase)
+        return ConnectionRecord(ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases)
+
+    def fetch(self):
+        for line in self.f.readlines():
+            yield self.parse_line(line.strip())
     
 def get_candidates(cch_all_phases_norm, peak_thr, trough_thr):
     warnings.filterwarnings('ignore')
@@ -113,7 +193,7 @@ def call_troughs(cch_all_phases, trough_candidates, min_num_spikes_neighbour, ce
     return bins_with_troughs_final
 
 
-def create_phase_records_firing_prob(cch_all_phases_norm, peak_indices, trough_indices):
+def create_phase_records(cch_all_phases_norm, peak_indices, trough_indices):
     phases = [[], [], [], []]
     window_length = int(len(cch_all_phases_norm[0]) / 2)
 
@@ -121,13 +201,13 @@ def create_phase_records_firing_prob(cch_all_phases_norm, peak_indices, trough_i
         chance_firing_prob = np.mean(np.concatenate((cch_all_phases_norm[pidx[0],:29], cch_all_phases_norm[pidx[0], 81:])))
         phases[pidx[0]].append({'TP' : 'PK', 
                                 'BN' : pidx[1] - window_length,
-                                'IN' : np.round(cch_all_phases_norm[pidx] - chance_firing_prob, 3)})
+                                'IN' : np.round(-(chance_firing_prob - cch_all_phases_norm[pidx]), 3)})
     
     for tidx in trough_indices:
         chance_firing_prob = np.mean(np.concatenate((cch_all_phases_norm[tidx[0],:29], cch_all_phases_norm[tidx[0], 81:])))
         phases[tidx[0]].append({'TP' : 'TR', 
                                 'BN' : tidx[1] - window_length,
-                                'IN' : np.round(cch_all_phases_norm[tidx] - chance_firing_prob, 3)})
+                                'IN' : np.round(-(chance_firing_prob - cch_all_phases_norm[tidx]), 3)})
 
     return phases
 

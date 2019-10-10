@@ -11,14 +11,14 @@ from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet
 from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
-from ENCORR_call import ConnectionFile, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records_firing_prob
+from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
 
 
 def main():
     # Fetch command line argumnets
     options = parse_arguments()
     if not options.sub:
-        print('Choose between the modes ("correlate", "call", "correlogram", "connections", "heatmap" or "network").')
+        print('Choose between the modes ("correlate", "call", "correlogram", "stat", "connections", "heatmap" or "network").')
         return
 
     # Set up logging
@@ -85,9 +85,22 @@ def main():
         logging.info('PEAK MIN SPIKES: {0}'.format(options.peak_min_spikes))
         logging.info('TROUGH NEIGHBOURS MIN SPIKES: {0}'.format(options.trough_neighbours_min_spikes))
         logging.info('CENTER RANGE: +-{0} BINS'.format(options.center))
+
+        fmt = [{'ID' : 'TP', 'DS' : 'Connection Type'}, {'ID' : 'BN', 'DS' : 'Correlogram Bin'}, {'ID' : 'IN', 'DS' : 'Intensity'}]
+        col_names = ['REFTET', 'REFNEUR', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
+        ccf_header = ConnectionHeader(options.ccg, 
+                                      options.peak_thr, 
+                                      options.trough_thr, 
+                                      options.peak_min_spikes, 
+                                      options.trough_neighbours_min_spikes, 
+                                      options.center, 
+                                      fmt,
+                                      col_names)
+
         ccg_in = CorrelationFile(options.ccg, 'r')
-        ccf_out = ConnectionFile(options.outfile, 'w')
-        ccf_out.write_header(options.ccg, options.peak_thr, options.trough_thr, options.peak_min_spikes, options.trough_neighbours_min_spikes, options.center)
+        ccf_out = ConnectionFile(options.outfile, 'w', header=ccf_header)
+
+
         logging.info('# Call Connections')
         for rec in ccg_in.fetch():
             cch_all_phases = np.zeros(len(rec.phases[0]['CH']), dtype=int)
@@ -102,12 +115,13 @@ def main():
             peaks_idx = call_peaks(cch_all_phases, peak_candidates, options.peak_min_spikes, options.center)
             troughs_idx = call_troughs(cch_all_phases, trough_candidates, options.trough_neighbours_min_spikes, options.center)
 
-            phases_rec = create_phase_records_firing_prob(cch_all_phases_norm, peaks_idx, troughs_idx)
-            conn_rec = ConnectionRecord(rec.ref_tet, rec.ref_neur, rec.tar_tet, rec.tar_neur, 'TP:BN:IN', phases_rec)
+            phases_rec = create_phase_records(cch_all_phases_norm, peaks_idx, troughs_idx)
+            conn_rec = ConnectionRecord(rec.ref_tet, rec.ref_neur, rec.tar_tet, rec.tar_neur, fmt, phases_rec)
             if conn_rec.phases != [[], [], [], []]:  
                 ccf_out.write(conn_rec)
         
-    #if options.sub == 'correlogram':
+    if options.sub == 'stat':
+        logging.info('MODE: stat')
 
 
 
