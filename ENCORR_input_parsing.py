@@ -89,6 +89,14 @@ def parse_arguments(arguments = sys.argv[1:]):
                                 type=int,
                                 default=5,
                                 help='Number of bins around the center bin of the CCH to be considered the region of interest.')
-      
 
+      parser_stat = subparsers.add_parser('stat',
+                                           help='Plot statistics based on existing CCF file.')
+      parser_stat.add_argument('ccf',
+                                type=str,
+                                help='CCF file to get statistics from.')
+      parser_stat.add_argument('workdir',
+                                type=str,
+                                help='Directory to saves plots at.')
+      
       return parser.parse_args(arguments)

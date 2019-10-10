@@ -9,7 +9,7 @@ class ConnectionRecord:
         self.ref_neur = ref_neur
         self.tar_tet = tar_tet
         self.tar_neur = tar_neur
-        self.format = [f['ID'] for f in fmt]
+        self.format = fmt
         self.phases = phases
 
 
@@ -29,9 +29,9 @@ class ConnectionHeader:
 class ConnectionFile:
 
     def __init__(self, file, read_write, header=None):
-        self.file = file
         self.header = header
-        self.f = open(self.file, read_write)
+        self.f = open(file, read_write)
+        self.all_lines = self.f.readlines()
 
         if read_write == 'w' and self.header != None:
             self.write_header(self.header)
@@ -75,7 +75,7 @@ class ConnectionFile:
     
     def read_header(self):
         fmt = []
-        for line in self.file.readlines():
+        for line in self.all_lines:
             if line.startswith('#'):
                 if line.startswith('##'):
                     line_splitted = line.strip().split('=')
@@ -92,8 +92,8 @@ class ConnectionFile:
                     elif line_splitted[0][2:] == 'center':
                         center = int(line_splitted[1])
                     elif line_splitted[0][2:] == 'FORMAT':
-                        fmt_id = line.strip.split(',')[0][-2:]
-                        fmt_ds = line.strip.split('"')[1]
+                        fmt_id = line.strip().split(',')[0][-2:]
+                        fmt_ds = line.strip().split('"')[1]
                         fmt.append({'ID' : fmt_id, 'DS' : fmt_ds})
                 else:
                     col_names = line[1:].strip().split('\t')
@@ -101,7 +101,6 @@ class ConnectionFile:
                 break
         
         return ConnectionHeader(ccg, peak_thr, trough_thr, peak_min_spikes, trough_neighbours_min_spikes, center, fmt, col_names)
-
 
     def parse_line(self, line):
         fields = line.split('\t')
@@ -120,8 +119,8 @@ class ConnectionFile:
             for i in range(num_conn):
                 try:
                     conn_in_phase.append({'TP' : phase_as_str_splitted[idx[i]:idx[i+1]][0], 
-                                          'BN' : phase_as_str_splitted[idx[i]:idx[i+1]][1],
-                                          'IN' : phase_as_str_splitted[idx[i]:idx[i+1]][2]})
+                                          'BN' : int(phase_as_str_splitted[idx[i]:idx[i+1]][1]),
+                                          'IN' : float(phase_as_str_splitted[idx[i]:idx[i+1]][2])})
                 except ValueError:
                     conn_in_phase.append({'TP' : '.', 
                                           'BN' : '.',
@@ -130,9 +129,11 @@ class ConnectionFile:
         return ConnectionRecord(ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases)
 
     def fetch(self):
-        for line in self.f.readlines():
-            yield self.parse_line(line.strip())
+        for line in self.all_lines:
+            if not line.startswith('#'):
+                yield self.parse_line(line.strip())
     
+
 def get_candidates(cch_all_phases_norm, peak_thr, trough_thr):
     warnings.filterwarnings('ignore')
     try:    

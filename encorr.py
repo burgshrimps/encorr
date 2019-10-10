@@ -122,6 +122,13 @@ def main():
         
     if options.sub == 'stat':
         logging.info('MODE: stat')
+        logging.info('CCF FILE: {0}'.format(options.ccf))
+        logging.info('WORKDIR: {0}'.format(options.workdir))
+
+        ccf_in = ConnectionFile(options.ccf, 'r')
+
+        for rec in ccf_in.fetch():
+            print(rec.phases)
 
 
 
