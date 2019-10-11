@@ -12,6 +12,7 @@ from ENCORR_load_data import loadparams, loadtet
 from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
+from ENCORR_stat import plot_stat_intensity, plot_stat_bin
 
 
 def main():
@@ -127,8 +128,24 @@ def main():
 
         ccf_in = ConnectionFile(options.ccf, 'r')
 
+        stat_bin = [[], [], [], []]
+        stat_intensity = [[], [], [], []]
+        ref_tet = set()
+        tar_tet = set()
+
         for rec in ccf_in.fetch():
-            print(rec.phases)
+            for i in range(len(rec.phases)):
+                for conn in rec.phases[i]:
+                    if conn['TP'] != '.':
+                        ref_tet.add(rec.ref_tet)
+                        tar_tet.add(rec.tar_tet)
+                        stat_bin[i].append(conn['BN'])
+                        stat_intensity[i].append(conn['IN'])
+
+        logging.info('# Save statistics plots to {0}'.format(options.workdir))
+        plot_stat_intensity(stat_intensity, ref_tet, tar_tet, options.workdir)
+        plot_stat_bin(stat_bin, ref_tet, tar_tet, options.workdir)
+        
 
 
 

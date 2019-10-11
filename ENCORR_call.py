@@ -31,13 +31,14 @@ class ConnectionFile:
     def __init__(self, file, read_write, header=None):
         self.header = header
         self.f = open(file, read_write)
-        self.all_lines = self.f.readlines()
 
         if read_write == 'w' and self.header != None:
             self.write_header(self.header)
 
         elif read_write == 'r':
+            self.all_lines = self.f.readlines()
             self.header = self.read_header()
+            self.f.close()
         
     def phases_rec_to_str(self, phases_rec):
         all_phases_as_str = ''
@@ -69,7 +70,7 @@ class ConnectionFile:
                                                       conn_rec.ref_neur,
                                                       conn_rec.tar_tet,
                                                       conn_rec.tar_neur,
-                                                      ':'.join(conn_rec.format),
+                                                      ':'.join([f['ID'] for f in conn_rec.format]),
                                                       phases_as_str)
         self.f.write(conn_line)
     
