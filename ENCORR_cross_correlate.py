@@ -16,11 +16,34 @@ class CorrelationRecord:
         self.phases = phases
 
 
+class CorrelationHeader:
+
+    def __init__(self, indir, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names):
+        self.indir = indir
+        self.sampling_rate = sampling_rate
+        self.cut_time_before_stim = cut_time_before_stim
+        self.cut_time_exp_after_resp = cut_time_exp_after_resp
+        self.cut_time_study_after_stim = cut_time_study_after_stim
+        self.binsize = binsize
+        self.windowsize = windowsize
+        self.border_correction = border_correction
+        self.format = fmt
+        self.col_names = col_names
+
+
 class CorrelationFile:
 
-    def __init__(self, outfile, read_write):
-        self.outfile = outfile
-        self.f = open(self.outfile, read_write)
+    def __init__(self, file, read_write, header=None):
+        self.header = header
+        self.f = open(file, read_write)
+
+        if read_write == 'w' and self.header != None:
+            self.write_header(self.header)
+        
+        elif read_write == 'r':
+            self.all_lines = self.f.readlines()
+            self.header = self.read_header()
+            self.f.close()
 
     def write(self, corr_rec):
         phases_as_string = ''
@@ -46,7 +69,7 @@ class CorrelationFile:
         return CorrelationRecord(ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases)
         
     def fetch(self):
-        for line in self.f.readlines():
+        for line in self.all_lines:
             yield self.parse_line(line.strip())
 
             
@@ -73,6 +96,7 @@ def cch(st1, st2, binsize, windowsize, border_correction):
     return np.array(cch, dtype=int)
 
 def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketimes, phase, binsize, windowsize, border_correction):
+    windowsize = windowsize // binsize  # adjusted windowsize
     cch_all_neurons = dict()
     num_ref_spikes_all_neurons = dict()
     for rn in range(len(ref_spiketimes)):
@@ -94,7 +118,7 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
     return cch_all_neurons, num_ref_spikes_all_neurons
 
 
-def write_to_ccg(ref_tet_id, tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
+def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
                  ref_spk_exp_old, ref_spk_exp_new, outfile):
     ccg_out = CorrelationFile(outfile, 'w')
     fmt = ['CH', 'RS']
@@ -121,7 +145,7 @@ def write_to_ccg(ref_tet_id, tar_tet_id, cch_baseline, cch_study, cch_exp_old, c
         exp_new_info['RS'] = ref_spk_exp_new[neur_pair]
         phases.append(exp_new_info)
 
-        corr_rec = CorrelationRecord(ref_tet_id, neur_pair[0], tar_tet_id, neur_pair[1], fmt, phases)
+        corr_rec = CorrelationRecord(options.ref_tet_id, neur_pair[0], options.tar_tet_id, neur_pair[1], fmt, phases)
         ccg_out.write(corr_rec)
 
         

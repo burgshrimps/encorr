@@ -97,6 +97,18 @@ def parse_arguments(arguments = sys.argv[1:]):
                                 help='CCF file to get statistics from.')
       parser_stat.add_argument('workdir',
                                 type=str,
-                                help='Directory to saves plots at.')
+                                help='Output and working directory.')
+
+      parser_correlogram = subparsers.add_parser('correlogram',
+                                                  help='Create correlogram plots from CCG file with marked connections from CCF file.')
+      parser_correlogram.add_argument('ccg',
+                                       type=str,
+                                       help='Input CCG file.')
+      parser_correlogram.add_argument('ccf',
+                                       type=str,
+                                       help='Input CCF file.')
+      parser_correlogram.add_argument('workdir',
+                                       type=str,
+                                       help='Output and working directory.')
       
       return parser.parse_args(arguments)

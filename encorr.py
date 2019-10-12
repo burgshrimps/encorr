@@ -13,6 +13,7 @@ from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
 from ENCORR_stat import plot_stat_intensity, plot_stat_bin
+from ENCORR_correlogram import plot_cch
 
 
 def main():
@@ -43,6 +44,11 @@ def main():
         logging.info('REFERENCE TETRODE: {0}'.format(options.ref_tet_id))
         logging.info('TARGET TETRODE: {0}'.format(options.tar_tet_id))
         logging.info('OUTPUT FILE: {0}'.format(options.outfile))
+        logging.info('CUT TIME BEFORE STIM: {0} ms'.format(options.cut_time_before_stim))
+        logging.info('CUT TIME EXP AFTER RESP: {0} ms'.format(options.cut_time_exp_after_resp))
+        logging.info('BINSIZE: {0} ms'.format(options.binsize))
+        logging.info('WINDOWSIZE: {0} ms'.format(options.windowsize))
+        logging.info('BORDER CORRECTION: {0}'.format(options.border_correction))
 
         logging.info('# Load parameters')
         P = loadparams(options.indir, options.cut_time_before_stim, options.cut_time_exp_after_resp)
@@ -74,7 +80,7 @@ def main():
                                                                       options.binsize, options.windowsize, options.border_correction)
 
         logging.info('# Write CCH to file')
-        write_to_ccg(options.ref_tet_id, options.tar_tet_id, cch_baseline, cch_study, cch_exp_old, cch_exp_new,
+        write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new,
                      num_ref_spikes_baseline, num_ref_spikes_study, num_ref_spikes_exp_old, num_ref_spikes_exp_new, options.outfile)
 
     if options.sub == 'call':
@@ -145,11 +151,29 @@ def main():
         logging.info('# Save statistics plots to {0}'.format(options.workdir))
         plot_stat_intensity(stat_intensity, ref_tet, tar_tet, options.workdir)
         plot_stat_bin(stat_bin, ref_tet, tar_tet, options.workdir)
-        
 
+    if options.sub == 'correlogram':
+        logging.info('MODE: correlogram')
+        logging.info('CCG FILE: {0}'.format(options.ccg))
+        logging.info('CCF FILE: {0}'.format(options.ccf))
+        logging.info('WORKDIR: {0}'.format(options.workdir))
 
+        ccg_in = CorrelationFile(options.ccg, 'r')
+        ccf_in = ConnectionFile(options.ccf, 'r')
+        ccf_header = ccf_in.header
 
+        logging.info('# Fetch CCF records')
+        connections = dict()
+        for conn_rec in ccf_in.fetch():
+            connections[(conn_rec.ref_tet, conn_rec.ref_neur, conn_rec.tar_tet, conn_rec.tar_neur)] = conn_rec 
 
+        logging.info('# Plot correlograms')
+        for corr_rec in ccg_in.fetch():
+            try:
+                conn_rec = connections[(corr_rec.ref_tet, corr_rec.ref_neur, corr_rec.tar_tet, corr_rec.tar_neur)]
+            except KeyError:
+                conn_rec = None
+            plot_cch(corr_rec, ccf_header, conn_rec, options.workdir)
 
 
 main()
