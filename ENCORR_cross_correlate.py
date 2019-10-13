@@ -38,19 +38,70 @@ class CorrelationFile:
         self.f = open(file, read_write)
 
         if read_write == 'w' and self.header != None:
-            self.write_header(self.header)
+            self.write_header()
         
         elif read_write == 'r':
             self.all_lines = self.f.readlines()
             self.header = self.read_header()
             self.f.close()
 
+    def read_header(self):
+        fmt = []
+        for line in self.all_lines:
+            if line.startswith('#'):
+                if line.startswith('##'):
+                    line_splitted = line.strip().split('=')
+                    if line_splitted[0][2:] == 'indir':
+                        indir = line_splitted[1]
+                    elif line_splitted[0][2:] == 'sampling_rate':
+                        sampling_rate = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'cut_time_before_stim':
+                        cut_time_before_stim = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'cut_time_exp_after_resp':
+                        cut_time_exp_after_resp = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'cut_time_study_after_stim':
+                        cut_time_study_after_stim = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'binsize':
+                        binsize = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'windowsize':
+                        windowsize = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'border_correction':
+                        border_correction = eval(line_splitted[1])
+                    elif line_splitted[0][2:] == 'FORMAT':
+                        fmt_id = line.strip().split(',')[0][-2:]
+                        fmt_ds = line.strip().split('"')[1]
+                        fmt.append({'ID' : fmt_id, 'DS' : fmt_ds})
+                else:
+                    col_names = line[1:].strip().split('\t')
+            else:
+                break
+        return CorrelationHeader(indir, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names)
+
     def write(self, corr_rec):
         phases_as_string = ''
         for phase in corr_rec.phases:
             phases_as_string += np.array2string(phase['CH'], max_line_width=1000000) + ':' + str(phase['RS']) + '\t'
-        corr_line = 'tet{0}\t{1}\ttet{2}\t{3}\t{4}\t{5}\n'.format(corr_rec.ref_tet, corr_rec.ref_neur+1, corr_rec.tar_tet, corr_rec.tar_neur+1, ':'.join(corr_rec.format), phases_as_string)
+        corr_line = 'tet{0}\t{1}\ttet{2}\t{3}\t{4}\t{5}\n'.format(corr_rec.ref_tet, 
+                                                                  corr_rec.ref_neur+1, 
+                                                                  corr_rec.tar_tet, 
+                                                                  corr_rec.tar_neur+1, 
+                                                                  ':'.join([f['ID'] for f in corr_rec.format]), 
+                                                                  phases_as_string)
         self.f.write(corr_line)
+
+    def write_header(self):
+        self.f.write('##indir={0}\n'.format(self.header.indir))
+        self.f.write('##sampling_rate={0}\n'.format(self.header.sampling_rate))
+        self.f.write('##cut_time_before_stim={0}\n'.format(self.header.cut_time_before_stim))
+        self.f.write('##cut_time_exp_after_resp={0}\n'.format(self.header.cut_time_exp_after_resp))
+        self.f.write('##cut_time_study_after_stim={0}\n'.format(self.header.cut_time_study_after_stim))
+        self.f.write('##binsize={0}\n'.format(self.header.binsize))
+        self.f.write('##windowsize={0}\n'.format(self.header.windowsize))
+        self.f.write('##border_correction={0}\n'.format(self.header.border_correction))
+        for fmt in self.header.format:
+            self.f.write('##FORMAT=<ID={0},Description="{1}">\n'.format(fmt['ID'], fmt['DS']))
+        col_names_line = '\t'.join(self.header.col_names)
+        self.f.write('#' + col_names_line + '\n')
 
     def parse_line(self, line):
         fields = line.split('\t')
@@ -70,7 +121,8 @@ class CorrelationFile:
         
     def fetch(self):
         for line in self.all_lines:
-            yield self.parse_line(line.strip())
+            if not line.startswith('#'):
+                yield self.parse_line(line.strip())
 
             
 def list2neo(st1, st2):
@@ -94,6 +146,7 @@ def cch(st1, st2, binsize, windowsize, border_correction):
         border_correction=border_correction, binary=False, kernel=None)
     cch = [int(val) for val in cch_object[0]]
     return np.array(cch, dtype=int)
+
 
 def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketimes, phase, binsize, windowsize, border_correction):
     windowsize = windowsize // binsize  # adjusted windowsize
@@ -120,8 +173,20 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
 
 def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
                  ref_spk_exp_old, ref_spk_exp_new, outfile):
-    ccg_out = CorrelationFile(outfile, 'w')
-    fmt = ['CH', 'RS']
+    fmt = [{'ID' : 'CH', 'DS' : 'Cross-Correlation Histogram'}, 
+           {'ID' : 'RS', 'DS' : 'Number of spikes in reference spike train'}]
+    col_names = ['REFTET', 'REFNEUR', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
+    ccg_header = CorrelationHeader(options.indir, 
+                                   options.sampling_rate, 
+                                   options.cut_time_before_stim, 
+                                   options.cut_time_exp_after_resp, 
+                                   P.cut_time_study_after_stim, 
+                                   options.binsize,
+                                   options.windowsize,
+                                   options.border_correction, 
+                                   fmt,
+                                   col_names)
+    ccg_out = CorrelationFile(outfile, 'w', header=ccg_header)
     for neur_pair in sorted(cch_baseline):
         phases = []
 

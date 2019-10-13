@@ -93,7 +93,9 @@ def main():
         logging.info('TROUGH NEIGHBOURS MIN SPIKES: {0}'.format(options.trough_neighbours_min_spikes))
         logging.info('CENTER RANGE: +-{0} BINS'.format(options.center))
 
-        fmt = [{'ID' : 'TP', 'DS' : 'Connection Type'}, {'ID' : 'BN', 'DS' : 'Correlogram Bin'}, {'ID' : 'IN', 'DS' : 'Intensity'}]
+        fmt = [{'ID' : 'TP', 'DS' : 'Connection Type'}, 
+               {'ID' : 'BN', 'DS' : 'Correlogram Bin'}, 
+               {'ID' : 'IN', 'DS' : 'Intensity'}]
         col_names = ['REFTET', 'REFNEUR', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
         ccf_header = ConnectionHeader(options.ccg, 
                                       options.peak_thr, 

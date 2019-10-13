@@ -33,7 +33,7 @@ class ConnectionFile:
         self.f = open(file, read_write)
 
         if read_write == 'w' and self.header != None:
-            self.write_header(self.header)
+            self.write_header()
 
         elif read_write == 'r':
             self.all_lines = self.f.readlines()
@@ -52,16 +52,16 @@ class ConnectionFile:
                 all_phases_as_str += phase_str[:-1] + '\t'
         return all_phases_as_str[:-1]
 
-    def write_header(self, header):
-        self.f.write('##ccg={0}\n'.format(header.ccg))
-        self.f.write('##peak_thr={0}\n'.format(header.peak_thr))
-        self.f.write('##trough_thr={0}\n'.format(header.trough_thr))
-        self.f.write('##peak_min_spikes={0}\n'.format(header.peak_min_spikes))
-        self.f.write('##trough_neighbours_min_spikes={0}\n'.format(header.trough_neighbours_min_spikes))
-        self.f.write('##center={0}\n'.format(header.center))
-        for fmt in header.format:
+    def write_header(self):
+        self.f.write('##ccg={0}\n'.format(self.header.ccg))
+        self.f.write('##peak_thr={0}\n'.format(self.header.peak_thr))
+        self.f.write('##trough_thr={0}\n'.format(self.header.trough_thr))
+        self.f.write('##peak_min_spikes={0}\n'.format(self.header.peak_min_spikes))
+        self.f.write('##trough_neighbours_min_spikes={0}\n'.format(self.header.trough_neighbours_min_spikes))
+        self.f.write('##center={0}\n'.format(self.header.center))
+        for fmt in self.header.format:
             self.f.write('##FORMAT=<ID={0},Description="{1}">\n'.format(fmt['ID'], fmt['DS']))
-        col_names_line = '\t'.join(header.col_names)
+        col_names_line = '\t'.join(self.header.col_names)
         self.f.write('#' + col_names_line + '\n')
 
     def write(self, conn_rec):

@@ -25,6 +25,7 @@ def plot_stat_bin(stat_bin, ref_tet, tar_tet, workdir):
     for i in range(4):
         plt.subplot(221 + i)
         sns.distplot(stat_bin[i], bins=np.arange(-5.5, 6.5, 1), kde=False, hist_kws={'edgecolor' : 'white'})
+        sns.despine()
         plt.title(titles[i] + ' (n={0})'.format(len(stat_bin[i])))
         plt.xlabel('Bin')
     plt.savefig(workdir + '/connection_timing_distribution.png')
