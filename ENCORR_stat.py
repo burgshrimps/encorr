@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def plot_stat_intensity(stat_intensity, ref_tet, tar_tet, workdir):
-    
     titles = ['Baseline', 'Study', 'Exp Old', 'Exp New']
     fig = plt.figure(figsize=(20,8))
     fig.subplots_adjust(hspace=0.4, wspace=0.4)

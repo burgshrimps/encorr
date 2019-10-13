@@ -5,6 +5,7 @@
 
 import logging
 import sys
+import os
 import numpy as np 
 
 from ENCORR_input_parsing import parse_arguments
@@ -96,7 +97,7 @@ def main():
         fmt = [{'ID' : 'TP', 'DS' : 'Connection Type'}, 
                {'ID' : 'BN', 'DS' : 'Correlogram Bin'}, 
                {'ID' : 'IN', 'DS' : 'Intensity'}]
-        col_names = ['REFTET', 'REFNEUR', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
+        col_names = ['REFARE', 'REFTET', 'REFNEUR', 'TARARE', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
         ccf_header = ConnectionHeader(options.ccg, 
                                       options.peak_thr, 
                                       options.trough_thr, 
@@ -125,7 +126,7 @@ def main():
             troughs_idx = call_troughs(cch_all_phases, trough_candidates, options.trough_neighbours_min_spikes, options.center)
 
             phases_rec = create_phase_records(cch_all_phases_norm, peaks_idx, troughs_idx)
-            conn_rec = ConnectionRecord(rec.ref_tet, rec.ref_neur, rec.tar_tet, rec.tar_neur, fmt, phases_rec)
+            conn_rec = ConnectionRecord(rec.ref_area, rec.ref_tet, rec.ref_neur, rec.tar_area, rec.tar_tet, rec.tar_neur, fmt, phases_rec)
             if conn_rec.phases != [[], [], [], []]:  
                 ccf_out.write(conn_rec)
         
@@ -151,6 +152,8 @@ def main():
                         stat_intensity[i].append(conn['IN'])
 
         logging.info('# Save statistics plots to {0}'.format(options.workdir))
+        if not os.path.exists(options.workdir):
+            os.makedirs(options.workdir)
         plot_stat_intensity(stat_intensity, ref_tet, tar_tet, options.workdir)
         plot_stat_bin(stat_bin, ref_tet, tar_tet, options.workdir)
 
@@ -162,7 +165,6 @@ def main():
 
         ccg_in = CorrelationFile(options.ccg, 'r')
         ccf_in = ConnectionFile(options.ccf, 'r')
-        ccf_header = ccf_in.header
 
         logging.info('# Fetch CCF records')
         connections = dict()
@@ -170,12 +172,14 @@ def main():
             connections[(conn_rec.ref_tet, conn_rec.ref_neur, conn_rec.tar_tet, conn_rec.tar_neur)] = conn_rec 
 
         logging.info('# Plot correlograms')
+        if not os.path.exists(options.workdir):
+            os.makedirs(options.workdir)
         for corr_rec in ccg_in.fetch():
             try:
                 conn_rec = connections[(corr_rec.ref_tet, corr_rec.ref_neur, corr_rec.tar_tet, corr_rec.tar_neur)]
             except KeyError:
                 conn_rec = None
-            plot_cch(corr_rec, ccf_header, conn_rec, options.workdir)
+            plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir)
 
 
 main()

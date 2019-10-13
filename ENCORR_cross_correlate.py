@@ -3,13 +3,16 @@ import quantities as pq
 import neo
 import numpy as np
 import logging
+import os
 
 
 class CorrelationRecord:
 
-    def __init__(self, ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases):
+    def __init__(self, ref_area, ref_tet, ref_neur, tar_area, tar_tet, tar_neur, fmt, phases):
+        self.ref_area = ref_area
         self.ref_tet = ref_tet
         self.ref_neur = ref_neur
+        self.tar_area = tar_area
         self.tar_tet = tar_tet
         self.tar_neur = tar_neur
         self.format = fmt
@@ -35,6 +38,10 @@ class CorrelationFile:
 
     def __init__(self, file, read_write, header=None):
         self.header = header
+
+        path_to_file = os.path.dirname(file)
+        if not os.path.exists(path_to_file) and path_to_file != '':
+            os.makedirs(path_to_file)
         self.f = open(file, read_write)
 
         if read_write == 'w' and self.header != None:
@@ -81,12 +88,14 @@ class CorrelationFile:
         phases_as_string = ''
         for phase in corr_rec.phases:
             phases_as_string += np.array2string(phase['CH'], max_line_width=1000000) + ':' + str(phase['RS']) + '\t'
-        corr_line = 'tet{0}\t{1}\ttet{2}\t{3}\t{4}\t{5}\n'.format(corr_rec.ref_tet, 
-                                                                  corr_rec.ref_neur+1, 
-                                                                  corr_rec.tar_tet, 
-                                                                  corr_rec.tar_neur+1, 
-                                                                  ':'.join([f['ID'] for f in corr_rec.format]), 
-                                                                  phases_as_string)
+        corr_line = '{0}\ttet{1}\t{2}\t{3}\ttet{4}\t{5}\t{6}\t{7}\n'.format(corr_rec.ref_area,
+                                                                            corr_rec.ref_tet, 
+                                                                            corr_rec.ref_neur+1,
+                                                                            corr_rec.tar_area, 
+                                                                            corr_rec.tar_tet, 
+                                                                            corr_rec.tar_neur+1, 
+                                                                            ':'.join([f['ID'] for f in corr_rec.format]), 
+                                                                            phases_as_string)
         self.f.write(corr_line)
 
     def write_header(self):
@@ -105,19 +114,21 @@ class CorrelationFile:
 
     def parse_line(self, line):
         fields = line.split('\t')
-        ref_tet = int(fields[0][3:])
-        ref_neur = int(fields[1])
-        tar_tet = int(fields[2][3:])
-        tar_neur = int(fields[3])
-        fmt = fields[4].split(':')
-        phases_as_string = fields[5:]
+        ref_area = fields[0]
+        ref_tet = int(fields[1][3:])
+        ref_neur = int(fields[2])
+        tar_area = fields[3]
+        tar_tet = int(fields[4][3:])
+        tar_neur = int(fields[5])
+        fmt = fields[6].split(':')
+        phases_as_string = fields[7:]
         phases = []
         for phase_as_str in phases_as_string:
             phase_dict = dict()
             phase_dict['CH'] = np.fromstring(phase_as_str.split(':')[0][1:-1], sep=' ', dtype=int)
             phase_dict['RS'] = int(phase_as_str.split(':')[1])
             phases.append(phase_dict)
-        return CorrelationRecord(ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases)
+        return CorrelationRecord(ref_area, ref_tet, ref_neur, tar_area, tar_tet, tar_neur, fmt, phases)
         
     def fetch(self):
         for line in self.all_lines:
@@ -175,7 +186,7 @@ def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, 
                  ref_spk_exp_old, ref_spk_exp_new, outfile):
     fmt = [{'ID' : 'CH', 'DS' : 'Cross-Correlation Histogram'}, 
            {'ID' : 'RS', 'DS' : 'Number of spikes in reference spike train'}]
-    col_names = ['REFTET', 'REFNEUR', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
+    col_names = ['REFARE', 'REFTET', 'REFNEUR', 'TARARE', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
     ccg_header = CorrelationHeader(options.indir, 
                                    options.sampling_rate, 
                                    options.cut_time_before_stim, 
@@ -210,7 +221,14 @@ def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, 
         exp_new_info['RS'] = ref_spk_exp_new[neur_pair]
         phases.append(exp_new_info)
 
-        corr_rec = CorrelationRecord(options.ref_tet_id, neur_pair[0], options.tar_tet_id, neur_pair[1], fmt, phases)
+        corr_rec = CorrelationRecord(P.tetrodes[options.ref_tet_id-1],
+                                     options.ref_tet_id, 
+                                     neur_pair[0],
+                                     P.tetrodes[options.tar_tet_id-1], 
+                                     options.tar_tet_id, 
+                                     neur_pair[1], 
+                                     fmt, 
+                                     phases)
         ccg_out.write(corr_rec)
 
         

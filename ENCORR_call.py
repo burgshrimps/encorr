@@ -1,12 +1,15 @@
 import numpy as np
 from scipy import stats
 import warnings
+import os
 
 class ConnectionRecord:
 
-    def __init__(self, ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases):
+    def __init__(self, ref_area, ref_tet, ref_neur, tar_area, tar_tet, tar_neur, fmt, phases):
+        self.ref_area = ref_area
         self.ref_tet = ref_tet
         self.ref_neur = ref_neur
+        self.tar_area = tar_area
         self.tar_tet = tar_tet
         self.tar_neur = tar_neur
         self.format = fmt
@@ -30,6 +33,10 @@ class ConnectionFile:
 
     def __init__(self, file, read_write, header=None):
         self.header = header
+
+        path_to_file = os.path.dirname(file)
+        if not os.path.exists(path_to_file) and path_to_file != '':
+            os.makedirs(path_to_file)
         self.f = open(file, read_write)
 
         if read_write == 'w' and self.header != None:
@@ -66,12 +73,14 @@ class ConnectionFile:
 
     def write(self, conn_rec):
         phases_as_str = self.phases_rec_to_str(conn_rec.phases)
-        conn_line = 'tet{0}\t{1}\ttet{2}\t{3}\t{4}\t{5}\n'.format(conn_rec.ref_tet, 
-                                                      conn_rec.ref_neur,
-                                                      conn_rec.tar_tet,
-                                                      conn_rec.tar_neur,
-                                                      ':'.join([f['ID'] for f in conn_rec.format]),
-                                                      phases_as_str)
+        conn_line = '{0}\ttet{1}\t{2}\t{3}\ttet{4}\t{5}\t{6}\t{7}\n'.format(conn_rec.ref_area,
+                                                                            conn_rec.ref_tet, 
+                                                                            conn_rec.ref_neur,
+                                                                            conn_rec.tar_area,
+                                                                            conn_rec.tar_tet,
+                                                                            conn_rec.tar_neur,
+                                                                            ':'.join([f['ID'] for f in conn_rec.format]),
+                                                                            phases_as_str)
         self.f.write(conn_line)
     
     def read_header(self):
@@ -105,12 +114,14 @@ class ConnectionFile:
 
     def parse_line(self, line):
         fields = line.split('\t')
-        ref_tet = int(fields[0][3:])
-        ref_neur = int(fields[1])
-        tar_tet = int(fields[2][3:])
-        tar_neur = int(fields[3])
-        fmt = fields[4].split(':')
-        phases_as_string = fields[5:]
+        ref_area = fields[0]
+        ref_tet = int(fields[1][3:])
+        ref_neur = int(fields[2])
+        tar_area = fields[3]
+        tar_tet = int(fields[4][3:])
+        tar_neur = int(fields[5])
+        fmt = fields[6].split(':')
+        phases_as_string = fields[7:]
         phases = []
         for phase_as_str in phases_as_string:
             conn_in_phase = []
@@ -127,7 +138,7 @@ class ConnectionFile:
                                           'BN' : '.',
                                           'IN' : '.'})
             phases.append(conn_in_phase)
-        return ConnectionRecord(ref_tet, ref_neur, tar_tet, tar_neur, fmt, phases)
+        return ConnectionRecord(ref_area, ref_tet, ref_neur, tar_area, tar_tet, tar_neur, fmt, phases)
 
     def fetch(self):
         for line in self.all_lines:
