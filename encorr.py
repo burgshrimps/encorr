@@ -174,12 +174,16 @@ def main():
         logging.info('# Plot correlograms')
         if not os.path.exists(options.workdir):
             os.makedirs(options.workdir)
+        cnt = 0
         for corr_rec in ccg_in.fetch():
+            cnt += 1
             try:
                 conn_rec = connections[(corr_rec.ref_tet, corr_rec.ref_neur, corr_rec.tar_tet, corr_rec.tar_neur)]
             except KeyError:
                 conn_rec = None
             plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir)
+            if cnt == 1:
+                break
 
 
 main()

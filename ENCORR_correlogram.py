@@ -5,7 +5,7 @@ import numpy as np
 def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
     plt.rcParams.update(plt.rcParamsDefault)
     plt.rcParams.update({'font.size': 12})
-    f, axarr = plt.subplots(1, 4, figsize=(32, 4), sharey=True)
+    f, axarr = plt.subplots(1, 4, figsize=(32, 8), sharey=True)
     f.suptitle('Cross-correlation between tetrode ' + str(corr_rec.ref_tet) + ' (' + corr_rec.ref_area + ') and tetrode ' + str(
                 corr_rec.tar_tet) + ' (' + corr_rec.tar_area + ')\nNeurons: [' + str(corr_rec.ref_neur) + ', ' + str(
                 corr_rec.tar_neur) + ']')
@@ -34,10 +34,13 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
         axarr[i].plot([-6, -6], [0, y_lim], '--', color='grey')
         axarr[i].plot([6, 6], [0, y_lim], '--', color='grey')
 
-    b, t = plt.ylim()
+    _, t = plt.ylim()
     plt.ylim(top=t + (t*0.1))
+
+    plotname = workdir + '/cch_rt' + str(corr_rec.ref_tet) + '_rn' + str(corr_rec.ref_neur) + '_tt' + str(
+               corr_rec.tar_tet) + '_tn' + str(corr_rec.tar_neur) + '.png'
     
-    plt.show()
+    plt.savefig(plotname)
 
     
 
