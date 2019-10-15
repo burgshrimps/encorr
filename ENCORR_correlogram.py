@@ -34,6 +34,20 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
         axarr[i].plot([-6, -6], [0, y_lim], '--', color='grey')
         axarr[i].plot([6, 6], [0, y_lim], '--', color='grey')
 
+        try:
+            for conn in conn_rec.phases[i]:
+                if conn['TP'] != '.':
+                    if conn['TP'] == 'PK':
+                        color = 'orangered'
+                    elif conn['TP'] == 'TR':
+                        color = 'deepskyblue'
+                    bin_idx = conn['BN'] + ccg_header.windowsize
+                    axarr[i].text(rects[i][bin_idx].get_x() + rects[i][bin_idx].get_width()/2.0, 1.001 * rects[i][bin_idx].get_height(), '*', color=color, fontsize=25, fontweight='bold', ha='center')
+                else:
+                    continue
+        except AttributeError:
+            continue
+
     _, t = plt.ylim()
     plt.ylim(top=t + (t*0.1))
 
