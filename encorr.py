@@ -7,6 +7,7 @@ import logging
 import sys
 import os
 import numpy as np 
+import pickle
 
 from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet
@@ -15,13 +16,14 @@ from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, wri
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
 from ENCORR_stat import plot_stat_intensity, plot_stat_bin
 from ENCORR_correlogram import plot_cch
+from ENCORR_matrix import build_matrices
 
 
 def main():
     # Fetch command line argumnets
     options = parse_arguments()
     if not options.sub:
-        print('Choose between the modes ("correlate", "call", "correlogram", "stat", "connections", "heatmap" or "network").')
+        print('Choose between the modes ("correlate", "call", "correlogram", "stat", "matrix", "heatmap" or "network").')
         return
 
     # Set up logging
@@ -127,8 +129,7 @@ def main():
 
             phases_rec = create_phase_records(cch_all_phases_norm, peaks_idx, troughs_idx)
             conn_rec = ConnectionRecord(rec.ref_area, rec.ref_tet, rec.ref_neur, rec.tar_area, rec.tar_tet, rec.tar_neur, fmt, phases_rec)
-            if conn_rec.phases != [[], [], [], []]:  
-                ccf_out.write(conn_rec)
+            ccf_out.write(conn_rec)
         
     if options.sub == 'stat':
         logging.info('MODE: stat')
@@ -181,6 +182,20 @@ def main():
             except KeyError:
                 conn_rec = None
             plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir)
+    
+    if options.sub == 'matrix':
+        logging.info('MODE: matrix')
+        logging.info('CCF FILE: {0}'.format(options.ccf))
+        logging.info('OUTFILE: {0}'.format(options.outfile))
+
+        ccf_in = ConnectionFile(options.ccf, 'r')
+        dataframes = build_matrices(ccf_in)
+        pickle.dump(dataframes, open(options.outfile, 'wb'))
+
+
+
+
+    
 
 
 main()

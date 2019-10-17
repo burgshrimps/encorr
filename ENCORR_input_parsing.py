@@ -110,5 +110,14 @@ def parse_arguments(arguments = sys.argv[1:]):
       parser_correlogram.add_argument('workdir',
                                        type=str,
                                        help='Output and working directory.')
-      
+
+      parser_matrix = subparsers.add_parser('matrix',
+                                             help='Build phase specific connection matrices from given CCF file.')
+      parser_matrix.add_argument('ccf',
+                                  type=str,
+                                  help='Input CCF file.')
+      parser_matrix.add_argument('outfile',
+                                  type=str,
+                                  help='Output pickle file containing connection matrices. Must end with .p format.')
+
       return parser.parse_args(arguments)
