@@ -17,6 +17,7 @@ from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_
 from ENCORR_stat import plot_stat_intensity, plot_stat_bin
 from ENCORR_correlogram import plot_cch
 from ENCORR_matrix import build_matrices
+from ENCORR_heatmap import plot_connectivity_heatmap
 
 
 def main():
@@ -189,8 +190,16 @@ def main():
         logging.info('OUTFILE: {0}'.format(options.outfile))
 
         ccf_in = ConnectionFile(options.ccf, 'r')
-        dataframes = build_matrices(ccf_in)
-        pickle.dump(dataframes, open(options.outfile, 'wb'))
+        connectivity_dfs = build_matrices(ccf_in)
+        pickle.dump(connectivity_dfs, open(options.outfile, 'wb'))
+
+    if options.sub == 'heatmap':
+        logging.info('MODE: heatmap')
+        logging.info('CONNECTIVITY MATRICES: {0}'.format(options.conn_matrix))
+        logging.info('OUTFILE ROOT NAME: {0}'.format(options.outfile_root))
+
+        connectivity_dfs = pickle.load(open(options.conn_matrix, 'rb'))
+        plot_connectivity_heatmap(connectivity_dfs, options.outfile_root)
 
 
 

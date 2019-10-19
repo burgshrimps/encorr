@@ -120,4 +120,13 @@ def parse_arguments(arguments = sys.argv[1:]):
                                   type=str,
                                   help='Output pickle file containing connection matrices. Must end with .p format.')
 
+      parser_heatmap = subparsers.add_parser('heatmap',
+                                             help='Plot phase specific connectivity heatmaps.')
+      parser_heatmap.add_argument('conn_matrix',
+                                  type=str,
+                                  help='Connectivity matrices pickle file.')
+      parser_heatmap.add_argument('outfile_root',
+                                  type=str,
+                                  help='Root name for heatmap images.')
+
       return parser.parse_args(arguments)
