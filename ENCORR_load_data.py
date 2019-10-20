@@ -27,13 +27,8 @@ class Parameters:
         self.cut_time_exp_after_resp = cut_time_exp_after_resp  # time after resp. timestamp = end of each STOI in exp phase
 
 
-def loadparams(indir, cut_time_before_stim, cut_time_exp_after_resp):
-    # loads parameters used in experiment
-    # @ param indir : string, directory with .mat files
-    # @ return : class Parameters, struct with parameters in it
-    for file in os.listdir(indir):
-        if fnm.fnmatch(file, '*_params.mat'):
-            param = loadmat(indir + '/' + file)
+def loadparams(params_mat, cut_time_before_stim, cut_time_exp_after_resp):
+    param = loadmat(params_mat)
     tetrodes = np.array([tet[0] for tet in param['tet_list'][0]]) 
     labels = np.array([label[0] for label in param['label_oldnew']]) 
     stim_study = np.array([stim[0] for stim in param['stim_list_study']]) 
@@ -54,13 +49,7 @@ def loadparams(indir, cut_time_before_stim, cut_time_exp_after_resp):
                       cut_time_study_after_stim, cut_time_exp_after_resp)
 
 
-def loadtet(indir, tet_num, sampling_rate):
-    # loads spiketimes of all neurons of one tetrode into a ndarray
-    # @ param indir : string, directory where .mat files with spiketimes are located
-    # @ param tet_num : int, number id of tetrode to be loaded
-    # @ return tet: array of arrays,each inner array contains spike times for one neuron in [ms] rounded to ints 
-    for file in os.listdir(indir):
-        if fnm.fnmatch(file, '*' + str(tet_num) + '_manual.mat'):
-            tet_mat = loadmat(indir + '/' + file)
+def loadtet(tet_mat_file, sampling_rate):
+    tet_mat = loadmat(tet_mat_file)
     tet = [neuron[:,0].astype(int) for neuron in tet_mat['spikes']['spktimes'][0][0][0] / sampling_rate] 
     return tet

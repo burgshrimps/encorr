@@ -43,10 +43,10 @@ def main():
 
     if options.sub == 'correlate':
         logging.info('MODE: correlate')
-        logging.info('INDIR: {0}'.format(options.indir))
+        logging.info('REFERENCE TETRODE: {0}'.format(options.ref_mat))
+        logging.info('TARGET TETRODE: {0}'.format(options.tar_mat))
+        logging.info('PARAMETERS: {0}'.format(options.params_mat))
         logging.info('SAMPLING RATE: {0} kHz'.format(options.sampling_rate))
-        logging.info('REFERENCE TETRODE: {0}'.format(options.ref_tet_id))
-        logging.info('TARGET TETRODE: {0}'.format(options.tar_tet_id))
         logging.info('OUTPUT FILE: {0}'.format(options.outfile))
         logging.info('CUT TIME BEFORE STIM: {0} ms'.format(options.cut_time_before_stim))
         logging.info('CUT TIME EXP AFTER RESP: {0} ms'.format(options.cut_time_exp_after_resp))
@@ -55,13 +55,13 @@ def main():
         logging.info('BORDER CORRECTION: {0}'.format(options.border_correction))
 
         logging.info('# Load parameters')
-        P = loadparams(options.indir, options.cut_time_before_stim, options.cut_time_exp_after_resp)
+        P = loadparams(options.params_mat, options.cut_time_before_stim, options.cut_time_exp_after_resp)
         P.cut_time_before_stim = options.cut_time_before_stim
         P.cut_time_exp_after_resp = options.cut_time_exp_after_resp
 
         logging.info('# Load tetrodes')
-        ref_tet = loadtet(options.indir, options.ref_tet_id, options.sampling_rate)
-        tar_tet = loadtet(options.indir, options.tar_tet_id, options.sampling_rate)
+        ref_tet = loadtet(options.ref_mat, options.sampling_rate)
+        tar_tet = loadtet(options.tar_mat, options.sampling_rate)
 
         logging.info('# Cut out spiketrains of interest')
         ref_spiketimes_baseline = get_stoi(ref_tet, P, 'baseline')#[:4]

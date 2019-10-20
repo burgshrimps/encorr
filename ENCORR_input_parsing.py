@@ -10,18 +10,24 @@ def parse_arguments(arguments = sys.argv[1:]):
       parser_correlate = subparsers.add_parser('correlate',
                                                 help='Cross-correlate all neurons in the reference tetrode and all neurons in the target \
                                                       tetrode and saves cross-correlograms in .ccg file.')
-      parser_correlate.add_argument('indir',
+      parser_correlate.add_argument('ref_mat',
                                      type=str,
-                                     help='Input directory containing .mat files for experimental parameters and spiketimes.')
-      parser_correlate.add_argument('sampling_rate',
-                                     type=int,
-                                     help='Sampling rate of electrophysiology recording system.')
+                                     help='MAT file with spiketimes of reference tetrode.')
+      parser_correlate.add_argument('tar_mat',
+                                     type=str,
+                                     help='MAT file with spiketimes of target tetrode.')
+      parser_correlate.add_argument('params_mat',
+                                     type=str,
+                                     help='MAT file with experimental parameters.')
       parser_correlate.add_argument('ref_tet_id',
                                      type=int,
                                      help='ID of reference tetrode.')
       parser_correlate.add_argument('tar_tet_id',
                                      type=int,
                                      help='ID of target tetrode.')
+      parser_correlate.add_argument('sampling_rate',
+                                     type=int,
+                                     help='Sampling rate of electrophysiology recording system.')
       parser_correlate.add_argument('outfile',
                                      type=str,
                                      help='Output .ccg file.')
