@@ -135,4 +135,14 @@ def parse_arguments(arguments = sys.argv[1:]):
                                   type=str,
                                   help='Root name for heatmap images.')
 
+      parser_heatmap = subparsers.add_parser('network',
+                                             help='Plot neural connections as network weighted network graph.')
+      parser_heatmap.add_argument('input_dir',
+                                  type=str,
+                                  help='Directory containing connection matrices.')
+      parser_heatmap.add_argument('output_dir',
+                                  type=str,
+                                  help='Directory to save plots to.')
+
+
       return parser.parse_args(arguments)

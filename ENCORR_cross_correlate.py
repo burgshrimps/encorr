@@ -21,8 +21,9 @@ class CorrelationRecord:
 
 class CorrelationHeader:
 
-    def __init__(self, indir, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names):
-        self.indir = indir
+    def __init__(self, ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names):
+        self.ref_mat = ref_mat
+        self.tar_mat = tar_mat
         self.sampling_rate = sampling_rate
         self.cut_time_before_stim = cut_time_before_stim
         self.cut_time_exp_after_resp = cut_time_exp_after_resp
@@ -58,8 +59,10 @@ class CorrelationFile:
             if line.startswith('#'):
                 if line.startswith('##'):
                     line_splitted = line.strip().split('=')
-                    if line_splitted[0][2:] == 'indir':
-                        indir = line_splitted[1]
+                    if line_splitted[0][2:] == 'ref_mat':
+                        ref_mat = line_splitted[1]
+                    elif line_splitted[0][2:] == 'tar_mat':
+                        tar_mat = line_splitted[1]
                     elif line_splitted[0][2:] == 'sampling_rate':
                         sampling_rate = int(line_splitted[1])
                     elif line_splitted[0][2:] == 'cut_time_before_stim':
@@ -82,7 +85,7 @@ class CorrelationFile:
                     col_names = line[1:].strip().split('\t')
             else:
                 break
-        return CorrelationHeader(indir, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names)
+        return CorrelationHeader(ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names)
 
     def write(self, corr_rec):
         phases_as_string = ''
@@ -99,7 +102,8 @@ class CorrelationFile:
         self.f.write(corr_line)
 
     def write_header(self):
-        self.f.write('##indir={0}\n'.format(self.header.indir))
+        self.f.write('##ref_mat={0}\n'.format(self.header.ref_mat))
+        self.f.write('##tar_mat={0}\n'.format(self.header.tar_mat))
         self.f.write('##sampling_rate={0}\n'.format(self.header.sampling_rate))
         self.f.write('##cut_time_before_stim={0}\n'.format(self.header.cut_time_before_stim))
         self.f.write('##cut_time_exp_after_resp={0}\n'.format(self.header.cut_time_exp_after_resp))
@@ -164,8 +168,8 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
     cch_all_neurons = dict()
     num_ref_spikes_all_neurons = dict()
     for rn in range(len(ref_spiketimes)):
-        i = 1 if ref_tet_id == tar_tet_id else 0
-        for tn in range(rn+i, len(tar_spiketimes)):
+        b = rn+1 if ref_tet_id == tar_tet_id else 0
+        for tn in range(b, len(tar_spiketimes)):
             logging.info('CCH @ {0}: RefNeur {1}/{2}, TarNeur {3}/{4}'.format(phase, rn+1, len(ref_spiketimes), tn+1, len(tar_spiketimes)))
             neuron_cch = np.zeros(2*windowsize+1, dtype=int)
             neuron_num_ref_spikes = 0
@@ -183,11 +187,12 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
 
 
 def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
-                 ref_spk_exp_old, ref_spk_exp_new, outfile):
+                 ref_spk_exp_old, ref_spk_exp_new):
     fmt = [{'ID' : 'CH', 'DS' : 'Cross-Correlation Histogram'}, 
            {'ID' : 'RS', 'DS' : 'Number of spikes in reference spike train'}]
     col_names = ['REFARE', 'REFTET', 'REFNEUR', 'TARARE', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']
-    ccg_header = CorrelationHeader(options.indir, 
+    ccg_header = CorrelationHeader(options.ref_mat,
+                                   options.tar_mat, 
                                    options.sampling_rate, 
                                    options.cut_time_before_stim, 
                                    options.cut_time_exp_after_resp, 
@@ -197,7 +202,7 @@ def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, 
                                    options.border_correction, 
                                    fmt,
                                    col_names)
-    ccg_out = CorrelationFile(outfile, 'w', header=ccg_header)
+    ccg_out = CorrelationFile(options.outfile, 'w', header=ccg_header)
     for neur_pair in sorted(cch_baseline):
         phases = []
 

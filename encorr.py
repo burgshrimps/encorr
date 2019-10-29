@@ -18,6 +18,7 @@ from ENCORR_stat import plot_stat_intensity, plot_stat_bin
 from ENCORR_correlogram import plot_cch
 from ENCORR_matrix import build_matrices
 from ENCORR_heatmap import plot_connectivity_heatmap
+from ENCORR_network import create_network_df
 
 
 def main():
@@ -85,7 +86,7 @@ def main():
 
         logging.info('# Write CCH to file')
         write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new,
-                     num_ref_spikes_baseline, num_ref_spikes_study, num_ref_spikes_exp_old, num_ref_spikes_exp_new, options.outfile)
+                     num_ref_spikes_baseline, num_ref_spikes_study, num_ref_spikes_exp_old, num_ref_spikes_exp_new)
 
     if options.sub == 'call':
         logging.info('MODE: call')
@@ -200,12 +201,19 @@ def main():
 
         connectivity_dfs = pickle.load(open(options.conn_matrix, 'rb'))
         plot_connectivity_heatmap(connectivity_dfs, options.outfile_root)
+        
+    if options.sub == 'network':
+        logging.info('MODE: network')
+        logging.info('INPUT DIR: {0}'.format(options.input_dir))
+        logging.info('OUTPUT DIR: {0}'.format(options.output_dir))
 
+        all_conn_dfs = []
+        for file in os.listdir(options.input_dir):
+            if file.endswith('.p') or file.endswith('.pickle'):
+                all_conn_dfs.append(pickle.load(open(options.input_dir + '/' + file, 'rb')))
 
-
-
-    
-
+        for i in range(4):
+            create_network_df(all_conn_dfs, i)
 
 main()
 
