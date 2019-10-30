@@ -65,14 +65,14 @@ def main():
         tar_tet = loadtet(options.tar_mat, options.sampling_rate)
 
         logging.info('# Cut out spiketrains of interest')
-        ref_spiketimes_baseline = get_stoi(ref_tet, P, 'baseline')[:4]
-        ref_spiketimes_study = get_stoi(ref_tet, P, 'study')[:4]
-        ref_spiketimes_exp_old = get_stoi(ref_tet, P, 'exp_old')[:4]
-        ref_spiketimes_exp_new = get_stoi(ref_tet, P, 'exp_new')[:4]
-        tar_spiketimes_baseline = get_stoi(tar_tet, P, 'baseline')[:4]
-        tar_spiketimes_study = get_stoi(tar_tet, P, 'study')[:4]
-        tar_spiketimes_exp_old = get_stoi(tar_tet, P, 'exp_old')[:4]
-        tar_spiketimes_exp_new = get_stoi(tar_tet, P, 'exp_new')[:4]
+        ref_spiketimes_baseline = get_stoi(ref_tet, P, 'baseline')#[:4]
+        ref_spiketimes_study = get_stoi(ref_tet, P, 'study')#[:4]
+        ref_spiketimes_exp_old = get_stoi(ref_tet, P, 'exp_old')#[:4]
+        ref_spiketimes_exp_new = get_stoi(ref_tet, P, 'exp_new')#[:4]
+        tar_spiketimes_baseline = get_stoi(tar_tet, P, 'baseline')#[:4]
+        tar_spiketimes_study = get_stoi(tar_tet, P, 'study')#[:4]
+        tar_spiketimes_exp_old = get_stoi(tar_tet, P, 'exp_old')#[:4]
+        tar_spiketimes_exp_new = get_stoi(tar_tet, P, 'exp_new')#[:4]
 
         logging.info('# Cross-correlate spiketrains of interest')
         cch_baseline, num_ref_spikes_baseline = get_cch_for_all_neurons(options.ref_tet_id, options.tar_tet_id, ref_spiketimes_baseline, tar_spiketimes_baseline, 'baseline',
