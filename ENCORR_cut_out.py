@@ -20,7 +20,10 @@ def get_stoi(tet, P, phase):
     stoi_spktimes_tet = []
     if phase == 'baseline':
         for neuron in tet:
-            end_idx = np.where(neuron <= 300000)[0][-1]
+            try:
+                end_idx = np.where(neuron <= 300000)[0][-1]
+            except IndexError:
+                end_idx = 1
             stoi_spktimes_tet.append([neuron[:end_idx]])
 
     if phase == 'study':
