@@ -36,7 +36,7 @@ def loadparams(params_mat, cut_time_before_stim, cut_time_exp_after_resp):
     stim_exp =  param['stim_list_exp'][0] 
     stim_exp_new = stim_exp[np.where(labels == 1)] 
     stim_exp_old = stim_exp[np.where(labels == 0)] 
-    ts_resp_exp = param['ts_response_video'][:,0] * 1000 ### chnaged for LE84, change back to [:,3] for LE46
+    ts_resp_exp = param['ts_response_video'][:,0] ### chnaged for LE84, change back to [:,3] * 1000 for LE46
     ts_resp_exp_new = ts_resp_exp[np.where(labels == 1)] 
     ts_resp_exp_old = ts_resp_exp[np.where(labels == 0)] 
     ts_stim_all = [] ### changed for LE84, change back to param['ts_stimon'][0] for LE46

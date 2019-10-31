@@ -158,7 +158,7 @@ def cch(st1, st2, binsize, windowsize, border_correction):
     st2_binned = eph.conversion.BinnedSpikeTrain(st2, binsize=binsize * pq.ms)
     cch_object = eph.spike_train_correlation.cross_correlation_histogram(
         st1_binned, st2_binned, window=[-windowsize, windowsize],
-        border_correction=border_correction, binary=False, kernel=None)
+        border_correction=border_correction, binary=False, kernel=None, method='speed')
     cch = [int(val) for val in cch_object[0]]
     return np.array(cch, dtype=int)
 
@@ -173,12 +173,14 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
             logging.info('CCH @ {0}: RefNeur {1}/{2}, TarNeur {3}/{4}'.format(phase, rn+1, len(ref_spiketimes), tn+1, len(tar_spiketimes)))
             neuron_cch = np.zeros(2*windowsize+1, dtype=int)
             neuron_num_ref_spikes = 0
+
             for odor in range(len(ref_spiketimes[0])):
                 try:
-                    ref_spiketrain, tar_spiketrain = list2neo(ref_spiketimes[rn][odor], tar_spiketimes[tn][odor])
+                    min_spike_ts = min(ref_spiketimes[rn][odor][0], tar_spiketimes[tn][odor][0])
+                    ref_spiketrain, tar_spiketrain = list2neo(ref_spiketimes[rn][odor] - min_spike_ts, tar_spiketimes[tn][odor] - min_spike_ts)
                     neuron_cch += cch(ref_spiketrain, tar_spiketrain, binsize, windowsize, border_correction)
                     neuron_num_ref_spikes += len(ref_spiketimes[rn][odor])
-                except ValueError:  # case when at least one of the two spiketrains contains no neurons at all
+                except (ValueError, IndexError):  # case when at least one of the two spiketrains contains no neurons at all
                     neuron_cch += np.zeros(2*windowsize+1, dtype=int)
                     neuron_num_ref_spikes += len(ref_spiketimes[rn][odor])
             cch_all_neurons[(rn, tn)] = neuron_cch

@@ -3,15 +3,15 @@ import numpy as np
 
 def cut_out(spiketrain, pre_start_time, post_end_time, start_ts, end_ts):
     """ Cuts out STOI from input spiketrain such that STOI = spiketrain[start_ts-pre_start_time:end_ts+post_end_time] """
-    try:
+    if spiketrain[0] <= start_ts - pre_start_time:
         start_idx = np.where(spiketrain >= start_ts - pre_start_time)[0][0]
-    except IndexError:  # there is no spike before start_ts - pre_start_time
+        end_idx = np.where(spiketrain <= end_ts + post_end_time)[0][-1]
+    else:
         if spiketrain[0] <= end_ts + post_end_time:
-            start_idx = 0 
+            start_idx = 0
             end_idx = np.where(spiketrain <= end_ts + post_end_time)[0][-1]
         else:
-            return np.array([])
-    end_idx = np.where(spiketrain <= end_ts + post_end_time)[0][-1]
+            return []
     return spiketrain[start_idx:end_idx+1]
 
 
@@ -23,7 +23,7 @@ def get_stoi(tet, P, phase):
             try:
                 end_idx = np.where(neuron <= 300000)[0][-1]
             except IndexError:
-                end_idx = 1
+                end_idx = 0
             stoi_spktimes_tet.append([neuron[:end_idx]])
 
     if phase == 'study':
