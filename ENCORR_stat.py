@@ -2,7 +2,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt 
 import numpy as np
 
-def plot_stat_intensity(stat_intensity, ref_tet, tar_tet, workdir):
+def plot_stat_intensity(stat_intensity, ref_tet, tar_tet, outdir):
     titles = ['Baseline', 'Study', 'Exp Old', 'Exp New']
     fig = plt.figure(figsize=(20,8))
     fig.subplots_adjust(hspace=0.4, wspace=0.4)
@@ -13,10 +13,10 @@ def plot_stat_intensity(stat_intensity, ref_tet, tar_tet, workdir):
         sns.despine()
         plt.title(titles[i] + ' (n={0})'.format(len(stat_intensity[i])))
         plt.xlabel('Connection Intensity')
-    plt.savefig(workdir + '/connection_intensity_distribution.png')
+    plt.savefig(outdir + '/stat_intensity.png')
 
 
-def plot_stat_bin(stat_bin, ref_tet, tar_tet, workdir):
+def plot_stat_bin(stat_bin, ref_tet, tar_tet, outdir):
     titles = ['Baseline', 'Study', 'Exp Old', 'Exp New']
     fig = plt.figure(figsize=(20,8))
     fig.subplots_adjust(hspace=0.4, wspace=0.4)
@@ -27,4 +27,4 @@ def plot_stat_bin(stat_bin, ref_tet, tar_tet, workdir):
         sns.despine()
         plt.title(titles[i] + ' (n={0})'.format(len(stat_bin[i])))
         plt.xlabel('Bin')
-    plt.savefig(workdir + '/connection_timing_distribution.png')
+    plt.savefig(outdir + '/stat_time.png')

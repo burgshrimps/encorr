@@ -26,7 +26,7 @@ def parse_arguments(arguments = sys.argv[1:]):
                                      type=int,
                                      help='ID of target tetrode.')
       parser_correlate.add_argument('sampling_rate',
-                                     type=int,
+                                     type=float,
                                      help='Sampling rate of electrophysiology recording system.')
       parser_correlate.add_argument('outfile',
                                      type=str,
@@ -98,12 +98,12 @@ def parse_arguments(arguments = sys.argv[1:]):
 
       parser_stat = subparsers.add_parser('stat',
                                            help='Plot statistics based on existing CCF file.')
-      parser_stat.add_argument('ccf',
+      parser_stat.add_argument('input_dir',
                                 type=str,
-                                help='CCF file to get statistics from.')
-      parser_stat.add_argument('workdir',
+                                help='Input directory containg CCF files.')
+      parser_stat.add_argument('output_dir',
                                 type=str,
-                                help='Output and working directory.')
+                                help='Output directory to save .PNG files in.')
 
       parser_correlogram = subparsers.add_parser('correlogram',
                                                   help='Create correlogram plots from CCG file with marked connections from CCF file.')
@@ -144,5 +144,25 @@ def parse_arguments(arguments = sys.argv[1:]):
                                   type=str,
                                   help='Directory to save plots to.')
 
+      parser_heatmap = subparsers.add_parser('count',
+                                             help='Count number of connections inside and across tetrodes.')
+      parser_heatmap.add_argument('input_dir',
+                                  type=str,
+                                  help='Directory containing connection matrices.')
+      parser_heatmap.add_argument('output_dir',
+                                  type=str,
+                                  help='Output directory to save CSV files to.')
+
+      parser_heatmap = subparsers.add_parser('conn-stat',
+                                             help='Construct a .mat file containing a field for each neuron with correlations to all other neurons.')
+      parser_heatmap.add_argument('input_dir',
+                                  type=str,
+                                  help='Directory containing CCF files.')
+      parser_heatmap.add_argument('tet_info',
+                                  type=str,
+                                  help='MAT file containing tetrode information.')
+      parser_heatmap.add_argument('out_mat',
+                                  type=str,
+                                  help='Output MAT file.')
 
       return parser.parse_args(arguments)

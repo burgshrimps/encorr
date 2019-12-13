@@ -16,6 +16,7 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
     titles = ['Baseline', 'Study Phase', 'Test Phase Old Odors', 'Test Phase New Odors']
     bins = np.array(range(-ccg_header.windowsize, ccg_header.windowsize + 1))
     rects = [[], [], [], []]
+    contains_conn = False
     for i in range(len(titles)):
         axarr[i].set_title(titles[i])
         rects[i] = axarr[i].bar(bins, corr_rec.phases[i]['CH'] / corr_rec.phases[i]['RS'], color='black', width=1)
@@ -37,6 +38,7 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
         try:
             for conn in conn_rec.phases[i]:
                 if conn['TP'] != '.':
+                    contains_conn = True
                     if conn['TP'] == 'PK':
                         color = 'orangered'
                     elif conn['TP'] == 'TR':
@@ -51,10 +53,11 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
     _, t = plt.ylim()
     plt.ylim(top=t + (t*0.1))
 
-    plotname = workdir + '/cch_rt' + str(corr_rec.ref_tet) + '_rn' + str(corr_rec.ref_neur) + '_tt' + str(
-               corr_rec.tar_tet) + '_tn' + str(corr_rec.tar_neur) + '.png'
-    
-    plt.savefig(plotname)
+    plotname = workdir + '/cch_rt' + str(corr_rec.ref_tet) + '_tt' + str(
+               corr_rec.tar_tet) + '_rn' + str(corr_rec.ref_neur) + '_tn' + str(corr_rec.tar_neur) + '.png'
+    if contains_conn:
+        plt.savefig(plotname)
+    plt.close()
 
     
 

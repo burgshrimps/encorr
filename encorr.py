@@ -8,17 +8,17 @@ import sys
 import os
 import numpy as np 
 import pickle
+import pandas as pd
 
 from ENCORR_input_parsing import parse_arguments
-from ENCORR_load_data import loadparams, loadtet
+from ENCORR_load_data import loadparams, loadtet, load_tet_info
 from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
 from ENCORR_stat import plot_stat_intensity, plot_stat_bin
 from ENCORR_correlogram import plot_cch
-from ENCORR_matrix import build_matrices
-from ENCORR_heatmap import plot_connectivity_heatmap
-from ENCORR_network import create_network_df
+from ENCORR_conn_stat import corr_matrix_from_ccf, to_matlab, count_conn_per_area
+
 
 
 def main():
@@ -47,6 +47,8 @@ def main():
         logging.info('REFERENCE TETRODE: {0}'.format(options.ref_mat))
         logging.info('TARGET TETRODE: {0}'.format(options.tar_mat))
         logging.info('PARAMETERS: {0}'.format(options.params_mat))
+        logging.info('REF TET ID: {0}'.format(options.ref_tet_id))
+        logging.info('TAR TET ID: {0}'.format(options.tar_tet_id))
         logging.info('SAMPLING RATE: {0} kHz'.format(options.sampling_rate))
         logging.info('OUTPUT FILE: {0}'.format(options.outfile))
         logging.info('CUT TIME BEFORE STIM: {0} ms'.format(options.cut_time_before_stim))
@@ -121,7 +123,10 @@ def main():
             cch_all_phases_norm = np.zeros(len(rec.phases[0]['CH']), dtype=float)
             for phase in rec.phases:
                 cch_all_phases = np.vstack((cch_all_phases, phase['CH']))
-                cch_all_phases_norm = np.vstack((cch_all_phases_norm, phase['CH'] / phase['RS']))
+                if phase['RS'] > 0:
+                    cch_all_phases_norm = np.vstack((cch_all_phases_norm, phase['CH'] / phase['RS']))
+                else:  # case no spikes in reference spiketrain, if no spikes then whole CCH 0 anyways
+                    cch_all_phases_norm = np.vstack((cch_all_phases_norm, np.zeros(len(rec.phases[0]['CH']), dtype=float)))
             cch_all_phases = cch_all_phases[1:,:]
             cch_all_phases_norm = cch_all_phases_norm[1:,:]
 
@@ -135,30 +140,28 @@ def main():
         
     if options.sub == 'stat':
         logging.info('MODE: stat')
-        logging.info('CCF FILE: {0}'.format(options.ccf))
-        logging.info('WORKDIR: {0}'.format(options.workdir))
-
-        ccf_in = ConnectionFile(options.ccf, 'r')
+        logging.info('INPUT DIR: {0}'.format(options.input_dir))
+        logging.info('OUTPUT DIR: {0}'.format(options.output_dir))
 
         stat_bin = [[], [], [], []]
         stat_intensity = [[], [], [], []]
         ref_tet = set()
         tar_tet = set()
 
-        for rec in ccf_in.fetch():
-            for i in range(len(rec.phases)):
-                for conn in rec.phases[i]:
-                    if conn['TP'] != '.':
-                        ref_tet.add(rec.ref_tet)
-                        tar_tet.add(rec.tar_tet)
-                        stat_bin[i].append(conn['BN'])
-                        stat_intensity[i].append(conn['IN'])
+        for file in os.listdir(options.input_dir):
+            if file.endswith('.ccf'):
+                ccf_in = ConnectionFile(options.input_dir + '/' + file, 'r')
+                for rec in ccf_in.fetch():
+                    for i in range(len(rec.phases)):
+                        for conn in rec.phases[i]:
+                            if conn['TP'] != '.':
+                                ref_tet.add(rec.ref_tet)
+                                tar_tet.add(rec.tar_tet)
+                                stat_bin[i].append(conn['BN'])
+                                stat_intensity[i].append(conn['IN'])
 
-        logging.info('# Save statistics plots to {0}'.format(options.workdir))
-        if not os.path.exists(options.workdir):
-            os.makedirs(options.workdir)
-        plot_stat_intensity(stat_intensity, ref_tet, tar_tet, options.workdir)
-        plot_stat_bin(stat_bin, ref_tet, tar_tet, options.workdir)
+        plot_stat_intensity(stat_intensity, ref_tet, tar_tet, options.output_dir)
+        plot_stat_bin(stat_bin, ref_tet, tar_tet, options.output_dir)
 
     if options.sub == 'correlogram':
         logging.info('MODE: correlogram')
@@ -185,35 +188,12 @@ def main():
                 conn_rec = None
             plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir)
     
-    if options.sub == 'matrix':
-        logging.info('MODE: matrix')
-        logging.info('CCF FILE: {0}'.format(options.ccf))
-        logging.info('OUTFILE: {0}'.format(options.outfile))
+    if options.sub == 'conn-stat':
+        tet_info = load_tet_info(options.tet_info)
+        corr_matrix, neur_count_cum = corr_matrix_from_ccf(options.input_dir, tet_info)
+        counts, npairs = count_conn_per_area(corr_matrix, tet_info, neur_count_cum)
+        to_matlab(tet_info, neur_count_cum, corr_matrix, options.out_mat, npairs, counts)
 
-        ccf_in = ConnectionFile(options.ccf, 'r')
-        connectivity_dfs = build_matrices(ccf_in)
-        pickle.dump(connectivity_dfs, open(options.outfile, 'wb'))
-
-    if options.sub == 'heatmap':
-        logging.info('MODE: heatmap')
-        logging.info('CONNECTIVITY MATRICES: {0}'.format(options.conn_matrix))
-        logging.info('OUTFILE ROOT NAME: {0}'.format(options.outfile_root))
-
-        connectivity_dfs = pickle.load(open(options.conn_matrix, 'rb'))
-        plot_connectivity_heatmap(connectivity_dfs, options.outfile_root)
-        
-    if options.sub == 'network':
-        logging.info('MODE: network')
-        logging.info('INPUT DIR: {0}'.format(options.input_dir))
-        logging.info('OUTPUT DIR: {0}'.format(options.output_dir))
-
-        all_conn_dfs = []
-        for file in os.listdir(options.input_dir):
-            if file.endswith('.p') or file.endswith('.pickle'):
-                all_conn_dfs.append(pickle.load(open(options.input_dir + '/' + file, 'rb')))
-
-        for i in range(4):
-            create_network_df(all_conn_dfs, i)
 
 main()
 

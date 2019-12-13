@@ -64,7 +64,7 @@ class CorrelationFile:
                     elif line_splitted[0][2:] == 'tar_mat':
                         tar_mat = line_splitted[1]
                     elif line_splitted[0][2:] == 'sampling_rate':
-                        sampling_rate = int(line_splitted[1])
+                        sampling_rate = float(line_splitted[1])
                     elif line_splitted[0][2:] == 'cut_time_before_stim':
                         cut_time_before_stim = int(line_splitted[1])
                     elif line_splitted[0][2:] == 'cut_time_exp_after_resp':
