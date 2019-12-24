@@ -15,7 +15,7 @@ from ENCORR_load_data import loadparams, loadtet, load_tet_info
 from ENCORR_cut_out import get_stoi
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
-from ENCORR_stat import plot_stat_intensity, plot_stat_bin
+from ENCORR_corr_stat import plot_stat_intensity, plot_stat_bin
 from ENCORR_correlogram import plot_cch
 from ENCORR_conn_stat import corr_matrix_from_ccf, to_matlab, count_conn_per_area
 
@@ -25,7 +25,7 @@ def main():
     # Fetch command line argumnets
     options = parse_arguments()
     if not options.sub:
-        print('Choose between the modes ("correlate", "call", "correlogram", "stat", "matrix", "heatmap" or "network").')
+        print('Choose between the modes ("correlate", "call", "correlogram", "corr-stat", "conn-stat").')
         return
 
     # Set up logging
@@ -52,15 +52,14 @@ def main():
         logging.info('SAMPLING RATE: {0} kHz'.format(options.sampling_rate))
         logging.info('OUTPUT FILE: {0}'.format(options.outfile))
         logging.info('CUT TIME BEFORE STIM: {0} ms'.format(options.cut_time_before_stim))
-        logging.info('CUT TIME EXP AFTER RESP: {0} ms'.format(options.cut_time_exp_after_resp))
+        logging.info('CUT TIME AFTER STIM: {0} ms'.format(options.cut_time_after_stim))
         logging.info('BINSIZE: {0} ms'.format(options.binsize))
         logging.info('WINDOWSIZE: {0} ms'.format(options.windowsize))
         logging.info('BORDER CORRECTION: {0}'.format(options.border_correction))
 
         logging.info('# Load parameters')
-        P = loadparams(options.params_mat, options.cut_time_before_stim, options.cut_time_exp_after_resp)
-        P.cut_time_before_stim = options.cut_time_before_stim
-        P.cut_time_exp_after_resp = options.cut_time_exp_after_resp
+        P = loadparams(options.params_mat, options.cut_time_before_stim, options.cut_time_after_stim, 
+                       options.baseline_end_time)
 
         logging.info('# Load tetrodes')
         ref_tet = loadtet(options.ref_mat, options.sampling_rate)
@@ -138,8 +137,8 @@ def main():
             conn_rec = ConnectionRecord(rec.ref_area, rec.ref_tet, rec.ref_neur, rec.tar_area, rec.tar_tet, rec.tar_neur, fmt, phases_rec)
             ccf_out.write(conn_rec)
         
-    if options.sub == 'stat':
-        logging.info('MODE: stat')
+    if options.sub == 'corr-stat':
+        logging.info('MODE: corr-stat')
         logging.info('INPUT DIR: {0}'.format(options.input_dir))
         logging.info('OUTPUT DIR: {0}'.format(options.output_dir))
 
@@ -186,9 +185,19 @@ def main():
                 conn_rec = connections[(corr_rec.ref_tet, corr_rec.ref_neur, corr_rec.tar_tet, corr_rec.tar_neur)]
             except KeyError:
                 conn_rec = None
-            plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir)
+            contains_conn = False
+            for phase in conn_rec.phases:
+                if phase[0]['TP'] != '.':
+                    contains_conn = True
+            if contains_conn:  # only plot correlograms with neural connections
+                plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir)
     
     if options.sub == 'conn-stat':
+        logging.info('MODE: conn-stat')
+        logging.info('INPUT DIR: {0}'.format(options.input_dir))
+        logging.info('TET INFO MAT: {0}'.format(options.tet_info))
+        logging.info('OUT MAT: {0}'.format(options.out_mat))
+        
         tet_info = load_tet_info(options.tet_info)
         corr_matrix, neur_count_cum = corr_matrix_from_ccf(options.input_dir, tet_info)
         counts, npairs = count_conn_per_area(corr_matrix, tet_info, neur_count_cum)

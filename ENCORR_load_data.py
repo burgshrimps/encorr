@@ -6,53 +6,68 @@ import pandas as pd
 
 class Parameters:
     # Conatins all parameters of the experiment
-    def __init__(self, tetrodes, labels, stim_study, stim_exp, stim_exp_new, stim_exp_old, ts_resp_exp, ts_resp_exp_new, ts_resp_exp_old,
-            ts_stim_all, ts_stim_study, ts_stim_exp_old, ts_stim_exp_new, ts_stim_exp, cut_time_before_stim, cut_time_study_after_stim,
-            cut_time_exp_after_resp):
+    def __init__(self, tetrodes, labels, ts_resp_exp, ts_resp_exp_new, ts_resp_exp_old, ts_stim_study, ts_stim_exp_old, ts_stim_exp_new, 
+                 ts_stim_exp, cut_time_before_stim, cut_time_after_stim, ts_rndm_baseline):
         self.tetrodes = tetrodes  # list of brain regions associated whith each tetrode
         self.labels = labels  # labels for old/new odor during retrieval phase (1 = new, 0 = old)
-        self.stim_study = stim_study  # number code for odors used in study phase
-        self.stim_exp = stim_exp  # number code for odors used in retrieval phase
-        self.stim_exp_new = stim_exp_new  # number code for new odors used in retrieval phase
-        self.stim_exp_old = stim_exp_old  # number code for old odors used in retrieval phase
         self.ts_resp_exp = ts_resp_exp  # timestamps of rodent response to stimulus during retrieval phase in [ms]
         self.ts_resp_exp_new = ts_resp_exp_new  # timestamps of rodent response to new odors during retrieval phase in [ms]
         self.ts_resp_exp_old = ts_resp_exp_old  # timestamps of rodent response to old odors during retrieval phase in [ms]
-        self.ts_stim_all = ts_stim_all  # timestamps of all stimulus presentations in [ms]
         self.ts_stim_study = ts_stim_study   # timestamps of stimulus presentation during study phase in [ms]
         self.ts_stim_exp_old = ts_stim_exp_old  # timestamps of stimulus presentation of old odors during retrieval phase in [ms]
         self.ts_stim_exp_new = ts_stim_exp_new  # timestamps of stimulus presentation of new odors during retrieval phase in [ms]
         self.ts_stim_exp = ts_stim_exp  # timestamps of stimulus presentation of all odors during retrieval phase in [ms]
         self.cut_time_before_stim = cut_time_before_stim  # time before stim. presentation timestamp = start of each spiketrain of interest (STOI)
-        self.cut_time_study_after_stim = cut_time_study_after_stim # time after stim. presentation timestamp in study phase = end of each (STOI) in study phase
-        self.cut_time_exp_after_resp = cut_time_exp_after_resp  # time after resp. timestamp = end of each STOI in exp phase
+        self.cut_time_after_stim = cut_time_after_stim # time after stim. presentation timestamp = end of each STOI
+        self.ts_rndm_baseline = ts_rndm_baseline
 
 
-def loadparams(params_mat, cut_time_before_stim, cut_time_exp_after_resp):
+def random_sample_baseline_ts(baseline_end_ts, cut_time_before_stim, cut_time_after_stim):
+    baseline_ts = [np.random.randint(0,baseline_end_ts)]
+    while len(baseline_ts) <= 10:
+        rndm = np.random.randint(0,baseline_end_ts) 
+        repeat = False
+        for ts in baseline_ts:
+            if abs(rndm - ts) < cut_time_after_stim + cut_time_before_stim:
+                repeat = True
+        if not repeat:
+            baseline_ts.append(rndm)
+    return sorted(baseline_ts)
+
+
+def loadparams(params_mat, cut_time_before_stim, cut_time_after_stim, baseline_end_time):
     param = loadmat(params_mat)
+
+    # LE46
+    # tetrodes = np.array([tet[0] for tet in param['tet_list'][0]]) 
+    # labels = np.array([label[0] for label in param['label_oldnew']])
+    # stim_study = np.array([stim[0] for stim in param['stim_list_study']]) 
+    # stim_exp =  param['stim_list_exp'][0] 
+    # stim_exp_new = stim_exp[np.where(labels == 1)] 
+    # stim_exp_old = stim_exp[np.where(labels == 0)] 
+    # ts_resp_exp = param['ts_response_video'][:,3]*1000
+    # ts_resp_exp_new = ts_resp_exp[np.where(labels == 1)] 
+    # ts_resp_exp_old = ts_resp_exp[np.where(labels == 0)] 
+    # ts_stim_all = param['ts_stimon'][0]
+    # ts_stim_study = ts_stim_all[0:10]
+    # ts_stim_exp = param['ts_stimon_exp_video'][:,3]
+    # ts_stim_exp_new = ts_stim_exp[np.where(labels == 1)] 
+    # ts_stim_exp_old = ts_stim_exp[np.where(labels == 0)] 
+    # ts_rndm_baseline = random_sample_baseline_ts(baseline_end_time, cut_time_before_stim, cut_time_after_stim)
+    
     tetrodes = np.array([tet[0] for tet in param['tet_list'][0]]) 
-    #labels = np.array([label[0] for label in param['label_oldnew']])  # LE46
-    labels = np.array(param['label_oldnew'][0])  # LE84
-    stim_study = np.array([stim[0] for stim in param['stim_list_study']]) 
-    stim_exp =  param['stim_list_exp'][0] 
-    stim_exp_new = stim_exp[np.where(labels == 1)] 
-    stim_exp_old = stim_exp[np.where(labels == 0)] 
-    #ts_resp_exp = param['ts_response_video'][:,3]*1000  # LE46
-    ts_resp_exp = param['ts_response_video'][:,0]  # LE84
+    labels = np.array(param['label_oldnew'][0])
+    ts_resp_exp = param['ts_response_video'][:,0]
     ts_resp_exp_new = ts_resp_exp[np.where(labels == 1)] 
     ts_resp_exp_old = ts_resp_exp[np.where(labels == 0)] 
-    #ts_stim_all = param['ts_stimon'][0]  # LE46
-    ts_stim_all = []  # LE84
-    #ts_stim_study = ts_stim_all[0:10]  # LE46
-    ts_stim_study = param['ts_stimon_study'][:,0]  # LE84
-    #ts_stim_exp = param['ts_stimon_exp_video'][:,3]  # LE46
-    ts_stim_exp = param['ts_stimon_exp'][:,0]  # LE84
+    ts_stim_study = param['ts_stimon_study'][:,0]
+    ts_stim_exp = param['ts_stimon_exp'][:,0]
     ts_stim_exp_new = ts_stim_exp[np.where(labels == 1)] 
     ts_stim_exp_old = ts_stim_exp[np.where(labels == 0)] 
-    cut_time_study_after_stim = np.mean((ts_resp_exp+cut_time_exp_after_resp)-ts_stim_exp, dtype = int) # mean spiketrain of interest (STOI) length in exp phase
-    return Parameters(tetrodes, labels, stim_study, stim_exp, stim_exp_new, stim_exp_old, ts_resp_exp, ts_resp_exp_new, ts_resp_exp_old,
-                      ts_stim_all, ts_stim_study, ts_stim_exp_old, ts_stim_exp_new, ts_stim_exp, cut_time_before_stim, 
-                      cut_time_study_after_stim, cut_time_exp_after_resp)
+    ts_rndm_baseline = random_sample_baseline_ts(baseline_end_time, cut_time_before_stim, cut_time_after_stim)
+
+    return Parameters(tetrodes, labels, ts_resp_exp, ts_resp_exp_new, ts_resp_exp_old, ts_stim_study, ts_stim_exp_old, ts_stim_exp_new, 
+                      ts_stim_exp, cut_time_before_stim, cut_time_after_stim, ts_rndm_baseline)
 
 
 def loadtet(tet_mat_file, sampling_rate):

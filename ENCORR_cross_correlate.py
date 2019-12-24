@@ -21,13 +21,12 @@ class CorrelationRecord:
 
 class CorrelationHeader:
 
-    def __init__(self, ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names):
+    def __init__(self, ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_after_stim, binsize, windowsize, border_correction, fmt, col_names):
         self.ref_mat = ref_mat
         self.tar_mat = tar_mat
         self.sampling_rate = sampling_rate
         self.cut_time_before_stim = cut_time_before_stim
-        self.cut_time_exp_after_resp = cut_time_exp_after_resp
-        self.cut_time_study_after_stim = cut_time_study_after_stim
+        self.cut_time_after_stim = cut_time_after_stim
         self.binsize = binsize
         self.windowsize = windowsize
         self.border_correction = border_correction
@@ -67,10 +66,8 @@ class CorrelationFile:
                         sampling_rate = float(line_splitted[1])
                     elif line_splitted[0][2:] == 'cut_time_before_stim':
                         cut_time_before_stim = int(line_splitted[1])
-                    elif line_splitted[0][2:] == 'cut_time_exp_after_resp':
-                        cut_time_exp_after_resp = int(line_splitted[1])
-                    elif line_splitted[0][2:] == 'cut_time_study_after_stim':
-                        cut_time_study_after_stim = int(line_splitted[1])
+                    elif line_splitted[0][2:] == 'cut_time_after_stim':
+                        cut_time_after_stim = int(line_splitted[1])
                     elif line_splitted[0][2:] == 'binsize':
                         binsize = int(line_splitted[1])
                     elif line_splitted[0][2:] == 'windowsize':
@@ -85,7 +82,7 @@ class CorrelationFile:
                     col_names = line[1:].strip().split('\t')
             else:
                 break
-        return CorrelationHeader(ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_exp_after_resp, cut_time_study_after_stim, binsize, windowsize, border_correction, fmt, col_names)
+        return CorrelationHeader(ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_after_stim, binsize, windowsize, border_correction, fmt, col_names)
 
     def write(self, corr_rec):
         phases_as_string = ''
@@ -106,8 +103,7 @@ class CorrelationFile:
         self.f.write('##tar_mat={0}\n'.format(self.header.tar_mat))
         self.f.write('##sampling_rate={0}\n'.format(self.header.sampling_rate))
         self.f.write('##cut_time_before_stim={0}\n'.format(self.header.cut_time_before_stim))
-        self.f.write('##cut_time_exp_after_resp={0}\n'.format(self.header.cut_time_exp_after_resp))
-        self.f.write('##cut_time_study_after_stim={0}\n'.format(self.header.cut_time_study_after_stim))
+        self.f.write('##cut_time_after_stim={0}\n'.format(self.header.cut_time_after_stim))
         self.f.write('##binsize={0}\n'.format(self.header.binsize))
         self.f.write('##windowsize={0}\n'.format(self.header.windowsize))
         self.f.write('##border_correction={0}\n'.format(self.header.border_correction))
@@ -197,8 +193,7 @@ def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, 
                                    options.tar_mat, 
                                    options.sampling_rate, 
                                    options.cut_time_before_stim, 
-                                   options.cut_time_exp_after_resp, 
-                                   P.cut_time_study_after_stim, 
+                                   options.cut_time_after_stim, 
                                    options.binsize,
                                    options.windowsize,
                                    options.border_correction, 
