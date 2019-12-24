@@ -100,9 +100,10 @@ def to_matlab(tet_info, neur_count_cum, corr_matrix, out_mat, npairs, counts):
                                        'xcorr' : np.hstack((s1,s2))})
 
     for key in npairs:
+        norm_npairs = npairs[key] if npairs[key] > 0 else 1
         variables['conn_counts'].append({'pair' : key,
                                          'neur_pairs' : npairs[key],
-                                         'counts' : np.vstack((counts[key], counts[key] / npairs[key]))})
+                                         'counts' : np.vstack((counts[key], counts[key] / norm_npairs))})
 
 
     savemat(out_mat, variables)
