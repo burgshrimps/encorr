@@ -2,6 +2,9 @@ import os
 import pandas as pd
 from scipy.io import savemat
 import numpy as np
+import csv
+import seaborn as sns 
+import matplotlib.pyplot as plt
 
 from ENCORR_call import ConnectionFile
 
@@ -107,3 +110,46 @@ def to_matlab(tet_info, neur_count_cum, corr_matrix, out_mat, npairs, counts):
 
 
     savemat(out_mat, variables)
+
+
+def node_list_to_csv(tet_info, outfile):
+    writer = csv.writer(open(outfile, 'w'))
+    header = ['id', 'tetrode', 'neuron', 'area']
+    writer.writerow(header)
+    i = 1
+    for tet in range(len(tet_info['neur_count'])):
+        for neuron in range(tet_info['neur_count'][tet]):
+            line = [i, tet+1, neuron+1, tet_info['area'][tet]]
+            writer.writerow(line)
+            i += 1
+
+
+def edge_list_to_csv(corr_matrix, phase, outfile):
+    writer = csv.writer(open(outfile, 'w'))
+    header = ['ref', 'tar', 'type', 'weight']
+    writer.writerow(header)
+    for rn in range(len(corr_matrix)):
+        for tn in range(len(corr_matrix[0])):
+            curr_entry = corr_matrix[rn, tn, phase]
+            if curr_entry > 0:
+                writer.writerow([rn+1, tn+1, 'exc', curr_entry])
+            elif curr_entry < 0:
+                writer.writerow([rn+1, tn+1, 'inh', curr_entry])
+
+
+def to_csv(corr_matrix, tet_info, out_root):
+    node_list_to_csv(tet_info, out_root + '_neurons.csv')
+    phases = ['baseline', 'study', 'exp_old', 'exp_new']
+    for i in range(4):
+        edge_list_to_csv(corr_matrix, i, out_root + '_' + phases[i] + '.csv')
+
+
+def plot_heatmaps(corr_matrix, out_root):
+    phases = ['baseline', 'study', 'exp_old', 'exp_new']
+    for i in range(4):
+        plt.figure(figsize=(20,8))
+        mat = corr_matrix[:,:,i] + corr_matrix[:,:,i].T - np.diag(np.diag(corr_matrix[:,:,i]))
+        sns.heatmap(mat, vmin = -1, vmax=1, cmap='coolwarm')
+        plt.title(phases[i])
+        plt.savefig(out_root + '_heatmap_' + phases[i] + '.png')
+        plt.close()

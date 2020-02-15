@@ -130,8 +130,8 @@ def parse_arguments(arguments = sys.argv[1:]):
       parser_heatmap.add_argument('tet_info',
                                   type=str,
                                   help='MAT file containing tetrode information.')
-      parser_heatmap.add_argument('out_mat',
+      parser_heatmap.add_argument('out_root',
                                   type=str,
-                                  help='Output MAT file.')
+                                  help='Root for output files.')
 
       return parser.parse_args(arguments)
