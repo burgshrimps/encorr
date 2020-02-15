@@ -18,10 +18,11 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
     rects = [[], [], [], []]
     for i in range(len(titles)):
         axarr[i].set_title(titles[i])
-        rects[i] = axarr[i].bar(bins, corr_rec.phases[i]['CH'] / corr_rec.phases[i]['RS'], color='black', width=1)
-        
-        phase_mean = np.mean(corr_rec.phases[i]['CH'] / corr_rec.phases[i]['RS'])
-        phase_std = np.std(corr_rec.phases[i]['CH'] / corr_rec.phases[i]['RS'])
+        norm_factor = corr_rec.phases[i]['RS'] if corr_rec.phases[i]['RS'] > 0 else 1  # sometimes RS = 0 and then RuntimeWarning occurs, so only divide by number of spikes in ref spiketrain if that number is > 0, otherwise the CCH does not contain any data anyway
+        rects[i] = axarr[i].bar(bins, corr_rec.phases[i]['CH'] / norm_factor, color='black', width=1)
+        phase_mean = np.mean(corr_rec.phases[i]['CH'] / norm_factor)
+        phase_std = np.std(corr_rec.phases[i]['CH'] / norm_factor)
+
         peak_thr_line = phase_mean + ccf_header.peak_thr * phase_std
         trough_thr_line = phase_mean + ccf_header.trough_thr * phase_std
 
@@ -51,10 +52,10 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
     _, t = plt.ylim()
     plt.ylim(top=t + (t*0.1))
 
-    plotname = workdir + '/cch_rt' + str(corr_rec.ref_tet) + '_rn' + str(corr_rec.ref_neur) + '_tt' + str(
-               corr_rec.tar_tet) + '_tn' + str(corr_rec.tar_neur) + '.png'
-    
+    plotname = workdir + '/cch_rt' + str(corr_rec.ref_tet) + '_tt' + str(
+               corr_rec.tar_tet) + '_rn' + str(corr_rec.ref_neur) + '_tn' + str(corr_rec.tar_neur) + '.png'
     plt.savefig(plotname)
+    plt.close()
 
     
 

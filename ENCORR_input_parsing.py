@@ -24,9 +24,9 @@ def parse_arguments(arguments = sys.argv[1:]):
                                      help='ID of reference tetrode.')
       parser_correlate.add_argument('tar_tet_id',
                                      type=int,
-                                     help='ID of target tetrode.')
+                                     help='ID of target tetrode.')                            
       parser_correlate.add_argument('sampling_rate',
-                                     type=int,
+                                     type=float,
                                      help='Sampling rate of electrophysiology recording system.')
       parser_correlate.add_argument('outfile',
                                      type=str,
@@ -36,12 +36,16 @@ def parse_arguments(arguments = sys.argv[1:]):
                                      type=int,
                                      default=200,
                                      help='Time in [ms] before stimulus presentation timestamp = start time of each spiketrain of interest.')
-      parser_correlate.add_argument('--cut_time_exp_after_resp',
+      parser_correlate.add_argument('--cut_time_after_stim',
                                      metavar='INT',
                                      type=int,
-                                     default=1000,
-                                     help='Time in [ms] after response timestamp in exp phase = end time of each spiketrain of interest \
-                                           in exp phase.')
+                                     default=6000,
+                                     help='Time in [ms] after stimulus presentation timestamp = end time of each spiketrain of interest.')
+      parser_correlate.add_argument('--baseline_end_time',
+                                     metavar='INT',
+                                     type=int,
+                                     default=300000,
+                                     help='Time in [ms] before experiment starts. Used to randomly sample baseline STOIs.')
       parser_correlate.add_argument('--binsize',
                                      metavar='INT',
                                      type=int,
@@ -96,14 +100,14 @@ def parse_arguments(arguments = sys.argv[1:]):
                                 default=5,
                                 help='Number of bins around the center bin of the CCH to be considered the region of interest.')
 
-      parser_stat = subparsers.add_parser('stat',
+      parser_stat = subparsers.add_parser('corr-stat',
                                            help='Plot statistics based on existing CCF file.')
-      parser_stat.add_argument('ccf',
+      parser_stat.add_argument('input_dir',
                                 type=str,
-                                help='CCF file to get statistics from.')
-      parser_stat.add_argument('workdir',
+                                help='Input directory containg CCF files.')
+      parser_stat.add_argument('output_dir',
                                 type=str,
-                                help='Output and working directory.')
+                                help='Output directory to save .PNG files in.')
 
       parser_correlogram = subparsers.add_parser('correlogram',
                                                   help='Create correlogram plots from CCG file with marked connections from CCF file.')
@@ -117,32 +121,17 @@ def parse_arguments(arguments = sys.argv[1:]):
                                        type=str,
                                        help='Output and working directory.')
 
-      parser_matrix = subparsers.add_parser('matrix',
-                                             help='Build phase specific connection matrices from given CCF file.')
-      parser_matrix.add_argument('ccf',
-                                  type=str,
-                                  help='Input CCF file.')
-      parser_matrix.add_argument('outfile',
-                                  type=str,
-                                  help='Output pickle file containing connection matrices. Must end with .p format.')
-
-      parser_heatmap = subparsers.add_parser('heatmap',
-                                             help='Plot phase specific connectivity heatmaps.')
-      parser_heatmap.add_argument('conn_matrix',
-                                  type=str,
-                                  help='Connectivity matrices pickle file.')
-      parser_heatmap.add_argument('outfile_root',
-                                  type=str,
-                                  help='Root name for heatmap images.')
-
-      parser_heatmap = subparsers.add_parser('network',
-                                             help='Plot neural connections as network weighted network graph.')
+      parser_heatmap = subparsers.add_parser('conn-stat',
+                                             help='Construct a .mat file containing a field for each neuron with correlations to all other neurons \
+                                                   and connection counts per area.')
       parser_heatmap.add_argument('input_dir',
                                   type=str,
-                                  help='Directory containing connection matrices.')
-      parser_heatmap.add_argument('output_dir',
+                                  help='Directory containing CCF files.')
+      parser_heatmap.add_argument('tet_info',
                                   type=str,
-                                  help='Directory to save plots to.')
-
+                                  help='MAT file containing tetrode information.')
+      parser_heatmap.add_argument('out_root',
+                                  type=str,
+                                  help='Root for output files.')
 
       return parser.parse_args(arguments)
