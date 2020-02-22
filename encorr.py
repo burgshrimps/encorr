@@ -179,6 +179,10 @@ def main():
         logging.info('# Plot correlograms')
         if not os.path.exists(options.workdir):
             os.makedirs(options.workdir)
+        if not os.path.exists(options.workdir + '/significant'):
+            os.makedirs(options.workdir + '/significant')
+        if not os.path.exists(options.workdir + '/not_significant'):
+            os.makedirs(options.workdir + '/not_significant')
 
         for corr_rec in ccg_in.fetch():
             try:
