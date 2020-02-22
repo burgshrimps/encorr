@@ -190,7 +190,9 @@ def main():
                 if phase[0]['TP'] != '.':
                     contains_conn = True
             if contains_conn:  # only plot correlograms with neural connections
-                plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir)
+                plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir + '/significant')
+            else:
+                plot_cch(corr_rec, ccg_in.header, conn_rec, ccf_in.header, options.workdir + '/not_significant')
     
     if options.sub == 'conn-stat':
         logging.info('MODE: conn-stat')
