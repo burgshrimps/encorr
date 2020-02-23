@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from ENCORR_call import ConnectionFile
 
+plt.style.use('ggplot')
 
 def diag_to_nan(m):
     l = m.shape[0]
@@ -51,28 +52,14 @@ def corr_matrix_from_ccf(indir, tet_info):
     return corr_matrix, neur_count_cum
 
 def count_conn_per_area(corr_matrix, tet_info, neur_count_cum):
-    counts = {'pCA3:pCA3' : np.array([0, 0, 0, 0]),
-              'pCA3:dCA3' : np.array([0, 0, 0, 0]),
-              'pCA3:pCA1' : np.array([0, 0, 0, 0]),
-              'pCA3:dCA1' : np.array([0, 0, 0, 0]),
-              'dCA3:dCA3' : np.array([0, 0, 0, 0]),
-              'dCA3:pCA1' : np.array([0, 0, 0, 0]),
-              'dCA3:dCA1' : np.array([0, 0, 0, 0]),
-              'pCA1:pCA1' : np.array([0, 0, 0, 0]),
-              'pCA1:dCA1' : np.array([0, 0, 0, 0]),
-              'dCA1:dCA1' : np.array([0, 0, 0, 0])}
-
-    npairs = {'pCA3:pCA3' : 0,
-              'pCA3:dCA3' : 0,
-              'pCA3:pCA1' : 0,
-              'pCA3:dCA1' : 0,
-              'dCA3:dCA3' : 0,
-              'dCA3:pCA1' : 0,
-              'dCA3:dCA1' : 0,
-              'pCA1:pCA1' : 0,
-              'pCA1:dCA1' : 0,
-              'dCA1:dCA1' : 0}
-
+    areas = ['pCA3', 'pCA3x', 'dCA3', 'CA1b', 'pCA1', 'pCA1b', 'dCA1', 'sub', 'cortex', 'x']
+    counts = dict()
+    npairs = dict()
+    for i in range(len(areas)):
+        for j in range(i, len(areas)):
+            counts[areas[i] + ':' + areas[j]] = np.array([0, 0, 0, 0])
+            npairs[areas[i] + ':' + areas[j]] = 0
+    
     for rn in range(neur_count_cum[-1]):
         for tn in range(rn+1, neur_count_cum[-1]):
             rt = np.where(rn<neur_count_cum)[0][0]
@@ -153,3 +140,6 @@ def plot_heatmaps(corr_matrix, out_root):
         plt.title(phases[i])
         plt.savefig(out_root + '_heatmap_' + phases[i] + '.png')
         plt.close()
+
+
+def plot_pca(corr_matrix, out_root)
