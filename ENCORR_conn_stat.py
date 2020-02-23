@@ -142,4 +142,4 @@ def plot_heatmaps(corr_matrix, out_root):
         plt.close()
 
 
-def plot_pca(corr_matrix, out_root)
+#def plot_pca(corr_matrix, out_root)
