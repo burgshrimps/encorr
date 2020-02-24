@@ -149,6 +149,7 @@ def plot_pca(corr_matrix, out_root):
     for i in range(4):
         plt.figure(figsize=(20,8))
         mat = corr_matrix[:,:,i] + corr_matrix[:,:,i].T - np.diag(np.diag(corr_matrix[:,:,i]))
+        mat = np.nan_to_num(mat)
         pca = PCA(n_components=2)
         principalComponents = pca.fit_transform(mat)
         principal_df = pd.DataFrame(data=principalComponents, columns=['PC1', 'PC2'])
