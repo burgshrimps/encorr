@@ -17,7 +17,7 @@ from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, wri
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
 from ENCORR_corr_stat import plot_stat_intensity, plot_stat_bin
 from ENCORR_correlogram import plot_cch
-from ENCORR_conn_stat import corr_matrix_from_ccf, to_matlab, count_conn_per_area, to_csv, plot_heatmaps
+from ENCORR_conn_stat import corr_matrix_from_ccf, to_matlab, count_conn_per_area, to_csv, plot_heatmaps, plot_pca
 
 
 
@@ -210,6 +210,7 @@ def main():
         to_matlab(tet_info, neur_count_cum, corr_matrix, options.out_root + '_conn_stat.mat', npairs, counts)
         to_csv(corr_matrix, tet_info, options.out_root)
         plot_heatmaps(corr_matrix, options.out_root)
+        plot_pca(corr_matrix, options.out_root)
 
 
 
