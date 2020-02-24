@@ -165,7 +165,7 @@ def plot_pca(corr_matrix, id_to_area, out_root):
         expl_var = pca.explained_variance_ratio_
         principal_df = pd.DataFrame(data=principalComponents, columns=['PC1', 'PC2'])
         principal_df['Area'] = id_to_area
-        principal_df['ID'] = np.arange(1, len(mat)+1)
+        principal_df['ID'] = np.arange(1, len(mat)+1, dtype=int)
         sns.scatterplot(x='PC1', y='PC2', hue='Area', data=principal_df, s=50)
         plt.xlabel('PC1 (' + str(np.round(expl_var[0]*100, 2)) + '%)')
         plt.ylabel('PC2 (' + str(np.round(expl_var[1]*100, 2)) + '%)')
