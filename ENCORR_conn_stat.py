@@ -148,6 +148,12 @@ def plot_heatmaps(corr_matrix, out_root):
         plt.close()
 
 
+def label_point(x, y, val, ax):
+    a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
+    for i, point in a.iterrows():
+        ax.text(point['x']+.02, point['y'], str(point['val']))
+
+
 def plot_pca(corr_matrix, id_to_area, out_root):
     phases = ['baseline', 'study', 'exp_old', 'exp_new']
     for i in range(4):
@@ -162,6 +168,11 @@ def plot_pca(corr_matrix, id_to_area, out_root):
         sns.scatterplot(x='PC1', y='PC2', hue='Area', data=principal_df, s=50)
         plt.xlabel('PC1 (' + str(np.round(expl_var[0]*100, 2)) + '%)')
         plt.ylabel('PC2 (' + str(np.round(expl_var[1]*100, 2)) + '%)')
+        label_point(principal_df.PC1, principal_df.PC2, np.arange(1, len(mat)+1), plt.gca())
         plt.title(phases[i])
         plt.savefig(out_root + '_pca_' + phases[i] + '.png')
         plt.close()
+
+
+
+        
