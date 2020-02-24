@@ -155,7 +155,7 @@ def plot_pca(corr_matrix, id_to_area, out_root):
         mat = corr_matrix[:,:,i] + corr_matrix[:,:,i].T - np.diag(np.diag(corr_matrix[:,:,i]))
         mat = np.nan_to_num(mat)
         pca = PCA(n_components=2)
-        principalComponents = pca.fit_transform(mat)
+        principalComponents = pca.fit(mat)
         principal_df = pd.DataFrame(data=principalComponents, columns=['PC1', 'PC2'])
         principal_df['Area'] = id_to_area
         sns.scatterplot(x='PC1', y='PC2', hue='Area', data=principal_df, s=50)
