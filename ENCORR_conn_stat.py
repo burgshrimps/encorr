@@ -106,11 +106,14 @@ def node_list_to_csv(tet_info, outfile):
     header = ['id', 'tetrode', 'neuron', 'area']
     writer.writerow(header)
     i = 1
+    id_to_area = []
     for tet in range(len(tet_info['neur_count'])):
         for neuron in range(tet_info['neur_count'][tet]):
             line = [i, tet+1, neuron+1, tet_info['area'][tet]]
+            id_to_area.append(tet_info['area'][tet])
             writer.writerow(line)
             i += 1
+    return id_to_area
 
 
 def edge_list_to_csv(corr_matrix, phase, outfile):
@@ -127,10 +130,11 @@ def edge_list_to_csv(corr_matrix, phase, outfile):
 
 
 def to_csv(corr_matrix, tet_info, out_root):
-    node_list_to_csv(tet_info, out_root + '_neurons.csv')
+    id_to_area = node_list_to_csv(tet_info, out_root + '_neurons.csv')
     phases = ['baseline', 'study', 'exp_old', 'exp_new']
     for i in range(4):
         edge_list_to_csv(corr_matrix, i, out_root + '_' + phases[i] + '.csv')
+    return id_to_area
 
 
 def plot_heatmaps(corr_matrix, out_root):
@@ -144,7 +148,7 @@ def plot_heatmaps(corr_matrix, out_root):
         plt.close()
 
 
-def plot_pca(corr_matrix, out_root):
+def plot_pca(corr_matrix, id_to_area, out_root):
     phases = ['baseline', 'study', 'exp_old', 'exp_new']
     for i in range(4):
         plt.figure(figsize=(20,8))
@@ -153,8 +157,8 @@ def plot_pca(corr_matrix, out_root):
         pca = PCA(n_components=2)
         principalComponents = pca.fit_transform(mat)
         principal_df = pd.DataFrame(data=principalComponents, columns=['PC1', 'PC2'])
-        #principal_df['Subpopulation'] = labels
-        sns.scatterplot(x='PC1', y='PC2', data=principal_df, s=50)
+        principal_df['Area'] = id_to_area
+        sns.scatterplot(x='PC1', y='PC2', hue='Area', data=principal_df, s=50)
         plt.title(phases[i])
         plt.savefig(out_root + '_pca_' + phases[i] + '.png')
         plt.close()

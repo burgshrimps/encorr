@@ -208,9 +208,9 @@ def main():
         corr_matrix, neur_count_cum = corr_matrix_from_ccf(options.input_dir, tet_info)
         counts, npairs = count_conn_per_area(corr_matrix, tet_info, neur_count_cum)
         to_matlab(tet_info, neur_count_cum, corr_matrix, options.out_root + '_conn_stat.mat', npairs, counts)
-        to_csv(corr_matrix, tet_info, options.out_root)
+        id_to_area = to_csv(corr_matrix, tet_info, options.out_root)
         plot_heatmaps(corr_matrix, options.out_root)
-        plot_pca(corr_matrix, options.out_root)
+        plot_pca(corr_matrix, id_to_area, options.out_root)
 
 
 
