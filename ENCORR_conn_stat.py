@@ -5,6 +5,8 @@ import numpy as np
 import csv
 import seaborn as sns 
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+import pandas as pd
 
 from ENCORR_call import ConnectionFile
 
@@ -142,4 +144,16 @@ def plot_heatmaps(corr_matrix, out_root):
         plt.close()
 
 
-#def plot_pca(corr_matrix, out_root)
+def plot_pca(corr_matrix, out_root):
+    phases = ['baseline', 'study', 'exp_old', 'exp_new']
+    for i in range(4):
+        plt.figure(figsize=(20,8))
+        mat = corr_matrix[:,:,i] + corr_matrix[:,:,i].T - np.diag(np.diag(corr_matrix[:,:,i]))
+        pca = PCA(n_components=2)
+        principalComponents = pca.fit_transform(mat)
+        principal_df = pd.DataFrame(data=principalComponents, columns=['PC1', 'PC2'])
+        #principal_df['Subpopulation'] = labels
+        sns.scatterplot(x='PC1', y='PC2', data=principal_df, s=50)
+        plt.title(phases[i])
+        plt.savefig(out_root + '_pca_' + phases[i] + '.png')
+        plt.close()
