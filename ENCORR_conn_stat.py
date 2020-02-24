@@ -151,7 +151,7 @@ def plot_heatmaps(corr_matrix, out_root):
 def label_point(x, y, val, ax):
     a = pd.concat({'x': x, 'y': y, 'val': val}, axis=1)
     for i, point in a.iterrows():
-        ax.text(point['x']+.02, point['y'], str(point['val']))
+        ax.text(point['x']+.02, point['y'], str(int(point['val'])))
 
 
 def plot_pca(corr_matrix, id_to_area, out_root):
