@@ -8,116 +8,74 @@ install.packages("networkD3")
 install.packages("ndtv")
 install.packages('circlize')
 
-setwd('/Users/burgshrimps/Documents/lin/analysis/XCORR/LE87/20190520/conn_stat')
-dataset_name <- 'LE87_20190520'
 
+animal <- 'LE84'
+date <- '20190712'
+shift <- 135
+v_size <- 3
+v_label_size <- 0.2
+dataset_name <- paste(animal, date, sep='_')
+wd <- paste('/Users/burgshrimps/Documents/lin/analysis/XCORR/', animal, '/', date, '/conn_stat', sep='')
+setwd(wd)
+
+library(plyr)
 neurons <- read.csv(paste(dataset_name, '_neurons.csv', sep=''), header=TRUE, sep=',', dec='.', check.names=FALSE)
-neurons$area.num <- as.numeric(factor(neurons$area))
+neurons <- neurons[neurons$area != 'cortex' & neurons$area != 'x', ]
+neurons[neurons == 'pCA3x'] <- 'pCA3'
+neurons$area <- factor(neurons$area, levels = c('sub', 'dCA1', 'CA1b', 'pCA1b', 'pCA1', 'dCA3', 'pCA3'))
+neurons$area.num <- as.numeric(neurons$area)
+neurons <- neurons[order(neurons$area.num), ]
+areas <- unique(neurons$area)
+
 
 baseline <- read.csv(paste(dataset_name, '_baseline.csv', sep=''), header=TRUE, sep=',', dec='.', check.names=FALSE)
 baseline$type.num <- as.numeric(factor(baseline$type))
+baseline <- baseline[baseline$ref %in% neurons$id & baseline$tar %in% neurons$id, ]
+
 study <- read.csv(paste(dataset_name, '_study.csv', sep=''), header=TRUE, sep=',', dec='.', check.names=FALSE)
 study$type.num <- as.numeric(factor(study$type))
+study <- study[study$ref %in% neurons$id & study$tar %in% neurons$id, ]
+
 exp_old <- read.csv(paste(dataset_name, '_exp_old.csv', sep=''), header=TRUE, sep=',', dec='.', check.names=FALSE)
 exp_old$type.num <- as.numeric(factor(exp_old$type))
+exp_old <- exp_old[exp_old$ref %in% neurons$id & exp_old$tar %in% neurons$id, ]
+
 exp_new <- read.csv(paste(dataset_name, '_exp_new.csv', sep=''), header=TRUE, sep=',', dec='.', check.names=FALSE)
 exp_new$type.num <- as.numeric(factor(exp_new$type))
+exp_new <- exp_new[exp_new$ref %in% neurons$id & exp_new$tar %in% neurons$id, ]
 
-# pCA3 : darkgoldenrod1
-# dCA3 : darkgoldenrod (dark)
-# pCA1 : cyan
-# dCA1 : cyan4 (dark)
-
-library('circlize')
-plot_chord <- function(neurons, phase, title, dataset_name) {
-  circos.clear()
-  phase$ref.area <- neurons[match(phase$ref, neurons$id),4]
-  phase$tar.area <- neurons[match(phase$tar, neurons$id),4]
-  phase$ref.tet <- neurons[match(phase$ref, neurons$id),2]
-  phase$tar.tet <- neurons[match(phase$tar, neurons$id),2]
-  pdf(paste(dataset_name, '_chord_',title, '.pdf', sep=''))
-  ### LE46 ###
-  #grid.col <- c('1'='darkgoldenrod1', '2'='cyan4', '3'='cyan4', '4'='cyan4', '7'='cyan', '8'='cyan')
-  
-  ### LE82 ###
-  #grid.col <- c('1'='cyan4', '2'='cyan4', '3'='cyan4', '4'='darkgoldenrod1', '5'='darkgoldenrod1', '6'='cyan4', '7'='cyan4', '9'='darkgoldenrod', '10'='darkgoldenrod', '11'='cyan', '12'='darkgoldenrod', '13'='cyan4', '14'='darkgoldenrod', '15'='darkgoldenrod1', '16'='darkgoldenrod1')
-  
-  ### LE83 ###
-  #grid.col <- c('2'='cyan4', '3'='cyan4', '4'='darkgoldenrod1', '5'='cyan4','8'='cyan4', '9'='darkgoldenrod', '10'='cyan', '13'='darkgoldenrod1', '15'='darkgoldenrod1', '16'='darkgoldenrod1')
-  
-  ### LE84 ###
-  #grid.col <- c('1'='cyan4', '2'='cyan4', '3'='cyan4', '4'='darkgoldenrod1', '5'='cyan4', '6'='cyan4', '7'='cyan4', '8'='cyan4', '9'='darkgoldenrod', '10'='darkgoldenrod', '11'='darkgoldenrod1', '12'='cyan', '13'='darkgoldenrod1', '14'='darkgoldenrod1', '15'='cyan', '16'='darkgoldenrod1')
-  
-  ### LE87 ###
-  grid.col <- c('3'='cyan4', '4'='darkgoldenrod1', '7'='cyan4', '8'='cyan4', '9'='darkgoldenrod', '10'='darkgoldenrod', '11'='cyan', '12'='darkgoldenrod', '13'='cyan', '14'='darkgoldenrod', '15'='darkgoldenrod1', '16'='darkgoldenrod1')
-  
-  chordDiagram(table(phase[,8:9]), grid.col = grid.col, col = 'grey', link.border = 'darkgrey', preAllocateTracks = list(track.height = uh(4, "mm"),track.margin = c(uh(4, "mm"), 0)), annotationTrack = c("grid", "axis"))
-  title(paste(dataset_name, ' ', title, sep=''))
-  circos.track(track.index = 2, panel.fun = function(x, y) {
-    sector.index = get.cell.meta.data("sector.index")
-    xlim = get.cell.meta.data("xlim")
-    ylim = get.cell.meta.data("ylim")
-    circos.text(mean(xlim), mean(ylim), sector.index, cex = 0.6, niceFacing = TRUE)
-  }, bg.border = NA)
-  
-  ### LE46 ###
-  #highlight.sector(c('2', '3', '4'), track.index = 1, col = "cyan4", text = "dCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('1'), track.index = 1, col = "darkgoldenrod1", text = "pCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('7', '8'), track.index = 1, col = "cyan", text = "pCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  
-  ### LE82 ###
-  #highlight.sector(c('2', '3', '13'), track.index = 1, col = "cyan4", text = "dCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('4', '5'), track.index = 1, col = "darkgoldenrod1", text = "pCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('9', '10'), track.index = 1, col = "darkgoldenrod", text = "dCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  
-  ### LE83 ###
-  #highlight.sector(c('2', '3', '5', '8'), track.index = 1, col = "cyan4", text = "dCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('4', '13', '15', '16'), track.index = 1, col = "darkgoldenrod1", text = "pCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('9'), track.index = 1, col = "darkgoldenrod", text = "dCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('10'), track.index = 1, col = "cyan", text = "pCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  
-  ### LE84 ###
-  #highlight.sector(c('1', '2', '7', '8'), track.index = 1, col = "cyan4", text = "dCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('4', '11', '13', '16'), track.index = 1, col = "darkgoldenrod1", text = "pCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  #highlight.sector(c('12', '15'), track.index = 1, col = "cyan", text = "pCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  
-  ### LE87 ###
-  highlight.sector(c('7'), track.index = 1, col = "cyan4", text = "dCA1", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  highlight.sector(c('4', '16'), track.index = 1, col = "darkgoldenrod1", text = "pCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  highlight.sector(c('9', '10'), track.index = 1, col = "darkgoldenrod", text = "dCA3", cex = 0.6, text.col = "black", niceFacing = TRUE)
-  
-  dev.off()
-}
-
-plot_chord(neurons, baseline, 'baseline', dataset_name)
-plot_chord(neurons, study, 'study', dataset_name)
-plot_chord(neurons, exp_old, 'exp_old', dataset_name)
-plot_chord(neurons, exp_new, 'exp_new', dataset_name)
 
 library('igraph')
-plot_circ <- function(neurons, phase, title, dataset_name) {
+plot_circ <- function(neurons, phase, title, dataset_name, shift, v_size, v_label_size) {
   net <- graph_from_data_frame(d=phase, vertices=neurons, directed=FALSE)
   l <- layout_in_circle(net)
-  V(net)$size <- 3
-  ### LE46 ###
-  #colrs <- c("cyan4", "cyan", "darkgoldenrod1")
+  end <- length(l[,1])+shift-1
+  l <- rbind(l, l)[shift:end, ]
+  V(net)$size <- v_size
   
-  ### LE82, LE83 ###
-  colrs <- c("cyan4", "darkgoldenrod", "cyan", "darkgoldenrod1")
-  
+  colrs <- c('yellow', 'red', 'greenyellow', 'greenyellow', 'green', 'cyan', 'orange')
   colors <- c('red', 'blue')
-  E(net)$width <- abs(E(net)$weight)
+  
+  if (is.null(E(net)$weight)){
+    E(net)$width <- 0
+  } else {
+    E(net)$width <- abs(E(net)$weight)
+  }
+  
   E(net)$color <- colors[E(net)$type.num]
   V(net)$color <- colrs[V(net)$area.num]
   pdf(paste(dataset_name, '_network_',title, '.pdf', sep=''))
-  plot(net, layout=l, vertex.label.cex=0.2)
+  plot(net, layout=l, vertex.label.cex=v_label_size)
   title(paste(dataset_name, ' ', title, sep=''))
+  
+  legend("topleft", legend=areas, col=colrs[unique(neurons$area.num)], cex=0.7, pch=21, pt.bg=colrs[unique(neurons$area.num)])
+
   dev.off()
 }
 
-plot_circ(neurons, baseline, 'baseline', dataset_name)
-plot_circ(neurons, study, 'study', dataset_name)
-plot_circ(neurons, exp_old, 'exp_old', dataset_name)
-plot_circ(neurons, exp_new, 'exp_new', dataset_name)
+plot_circ(neurons, baseline, 'baseline', dataset_name, shift, v_size, v_label_size)
+plot_circ(neurons, study, 'study', dataset_name, shift, v_size, v_label_size)
+plot_circ(neurons, exp_old, 'exp_old', dataset_name, shift, v_size, v_label_size)
+plot_circ(neurons, exp_new, 'exp_new', dataset_name, shift, v_size, v_label_size)
 
 
