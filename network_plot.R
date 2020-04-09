@@ -203,7 +203,7 @@ exp_old_effective <- filter_effective_connections(neurons_effective, exp_old, '&
 exp_new_effective <- filter_effective_connections(neurons_effective, exp_new, '&')
 
 
-# Plot effective neurons and connections in anatomical layout
+# Plot effective neurons and connections in anatomical layout.
 plot_anatomical(neurons_effective, baseline_effective, center, radius, dataset, 'baseline')
 plot_anatomical(neurons_effective, study_effective, center, radius, dataset, 'study')
 plot_anatomical(neurons_effective, exp_old_effective, center, radius, dataset, 'exp_old')
