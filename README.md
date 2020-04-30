@@ -1,3 +1,1 @@
-# encorr
-
-this is a test
+# ENCORR: Infering neural connectivity patterns by cross-correlation analysis
