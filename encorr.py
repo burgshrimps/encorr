@@ -99,6 +99,7 @@ def main():
         logging.info('TROUGH NEIGHBOURS MIN SPIKES: {0}'.format(options.trough_neighbours_min_spikes))
         logging.info('CENTER RANGE: +-{0} BINS'.format(options.center))
 
+        logging.info('# Prepare CCF file')
         fmt = [{'ID' : 'TP', 'DS' : 'Connection Type'}, 
                {'ID' : 'BN', 'DS' : 'Correlogram Bin'}, 
                {'ID' : 'IN', 'DS' : 'Intensity'}]
@@ -147,6 +148,7 @@ def main():
         ref_tet = set()
         tar_tet = set()
 
+        logging.info('# Parse CCF files')
         for file in os.listdir(options.input_dir):
             if file.endswith('.ccf'):
                 ccf_in = ConnectionFile(options.input_dir + '/' + file, 'r')
@@ -159,6 +161,7 @@ def main():
                                 stat_bin[i].append(conn['BN'])
                                 stat_intensity[i].append(conn['IN'])
 
+        logging.info('# Plot correlation statistics')
         plot_stat_intensity(stat_intensity, ref_tet, tar_tet, options.output_dir)
         plot_stat_bin(stat_bin, ref_tet, tar_tet, options.output_dir)
 
@@ -204,10 +207,13 @@ def main():
         logging.info('TET INFO MAT: {0}'.format(options.tet_info))
         logging.info('OUT ROOT: {0}'.format(options.out_root))
         
+        logging.info('Compute connection counts')
         tet_info = load_tet_info(options.tet_info)
         corr_matrix, neur_count_cum = corr_matrix_from_ccf(options.input_dir, tet_info)
         counts, npairs = count_conn_per_area(corr_matrix, tet_info, neur_count_cum)
         to_matlab(tet_info, neur_count_cum, corr_matrix, options.out_root + '_conn_stat.mat', npairs, counts)
+
+        logging.info('Plot heatmap and PCA')
         id_to_area = to_csv(corr_matrix, tet_info, options.out_root)
         plot_heatmaps(corr_matrix, options.out_root)
         plot_pca(corr_matrix, id_to_area, options.out_root)
