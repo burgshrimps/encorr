@@ -54,14 +54,14 @@ def corr_matrix_from_ccf(indir, tet_info):
     return corr_matrix, neur_count_cum
 
 def count_conn_per_area(corr_matrix, tet_info, neur_count_cum):
-    areas = ['pCA3', 'pCA3x', 'dCA3', 'CA1b', 'pCA1', 'pCA1b', 'dCA1', 'sub', 'cortex', 'x']
+    areas = ['CA1-1', 'CA1-2', 'CA1-3', 'CA1-4', 'CA1-5', 'CA3-1', 'CA3-2', 'CA3-3', 'CA3-4', 'CA3-5', 'X']
     counts = dict()
     npairs = dict()
     for i in range(len(areas)):
         for j in range(i, len(areas)):
             counts[areas[i] + ':' + areas[j]] = np.array([0, 0, 0, 0])
             npairs[areas[i] + ':' + areas[j]] = 0
-    
+    print(npairs.keys())
     for rn in range(neur_count_cum[-1]):
         for tn in range(rn+1, neur_count_cum[-1]):
             rt = np.where(rn<neur_count_cum)[0][0]
