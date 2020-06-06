@@ -61,7 +61,7 @@ def count_conn_per_area(corr_matrix, tet_info, neur_count_cum):
         for j in range(i, len(areas)):
             counts[areas[i] + ':' + areas[j]] = np.array([0, 0, 0, 0])
             npairs[areas[i] + ':' + areas[j]] = 0
-    print(npairs.keys())
+
     for rn in range(neur_count_cum[-1]):
         for tn in range(rn+1, neur_count_cum[-1]):
             rt = np.where(rn<neur_count_cum)[0][0]
