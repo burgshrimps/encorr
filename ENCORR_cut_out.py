@@ -2,7 +2,7 @@ import numpy as np
 
 
 def cut_out(spiketrain, pre_start_time, post_end_time, stim_ts):
-    """ Cuts out STOI from input spiketrain such that STOI = spiketrain[stim_ts-pre_start_time:stim_ts+post_end_time] """
+    """ Cuts out STOI (spike train of interest) from input spiketrain such that STOI = spiketrain[stim_ts-pre_start_time:stim_ts+post_end_time] """
     if spiketrain[-1] >= stim_ts - pre_start_time:
         if spiketrain[0] <= stim_ts - pre_start_time:
             start_idx = np.where(spiketrain >= stim_ts - pre_start_time)[0][0]
@@ -16,19 +16,6 @@ def cut_out(spiketrain, pre_start_time, post_end_time, stim_ts):
     else:
         return []
     return spiketrain[start_idx:end_idx+1]
-
-
-def random_sample_baseline_ts(baseline_end_ts, cut_time_before_stim, cut_time_after_stim):
-    baseline_ts = [np.random.randint(0,baseline_end_ts)]
-    while len(baseline_ts) <= 10:
-        rndm = np.random.randint(0,baseline_end_ts) 
-        repeat = False
-        for ts in baseline_ts:
-            if abs(rndm - ts) < cut_time_after_stim + cut_time_before_stim:
-                repeat = True
-        if not repeat:
-            baseline_ts.append(rndm)
-    return baseline_ts
 
 
 def get_stoi(tet, P, phase):

@@ -7,6 +7,8 @@ import os
 
 
 class CorrelationRecord:
+    """ One record corresponds to one row in the CCG file. It contains the cross-correlation histograms
+    between two neurons for all phases """
 
     def __init__(self, ref_area, ref_tet, ref_neur, tar_area, tar_tet, tar_neur, fmt, phases):
         self.ref_area = ref_area
@@ -20,6 +22,7 @@ class CorrelationRecord:
 
 
 class CorrelationHeader:
+    """ Header information for CCG file """
 
     def __init__(self, ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_after_stim, binsize, windowsize, border_correction, fmt, col_names):
         self.ref_mat = ref_mat
@@ -35,6 +38,7 @@ class CorrelationHeader:
 
 
 class CorrelationFile:
+    """ CCG file class handling all reading and writing of CCG files """
 
     def __init__(self, file, read_write, header=None):
         self.header = header
@@ -85,6 +89,7 @@ class CorrelationFile:
         return CorrelationHeader(ref_mat, tar_mat, sampling_rate, cut_time_before_stim, cut_time_after_stim, binsize, windowsize, border_correction, fmt, col_names)
 
     def write(self, corr_rec):
+        """ Writes one record (one line) in CCG file """
         phases_as_string = ''
         for phase in corr_rec.phases:
             phases_as_string += np.array2string(phase['CH'], max_line_width=1000000) + ':' + str(phase['RS']) + '\t'
@@ -113,6 +118,7 @@ class CorrelationFile:
         self.f.write('#' + col_names_line + '\n')
 
     def parse_line(self, line):
+        """ Parses one record line in CCG file """
         fields = line.split('\t')
         ref_area = fields[0]
         ref_tet = int(fields[1][3:])
@@ -131,6 +137,7 @@ class CorrelationFile:
         return CorrelationRecord(ref_area, ref_tet, ref_neur, tar_area, tar_tet, tar_neur, fmt, phases)
         
     def fetch(self):
+        """ Get all records from CCG file """
         for line in self.all_lines:
             if not line.startswith('#'):
                 yield self.parse_line(line.strip())
@@ -160,6 +167,8 @@ def cch(st1, st2, binsize, windowsize, border_correction):
 
 
 def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketimes, phase, binsize, windowsize, border_correction):
+    """ Calls cch() function for all combinations of neurouns in the two tetrodes. Each neurons contains data for 4 phases (baseline, 
+    study, exp_old, exp_new). Each phase contains 10 spiketrains (1 for each odor (stimulus) presentation). """
     windowsize = windowsize // binsize  # adjusted windowsize
     cch_all_neurons = dict()
     num_ref_spikes_all_neurons = dict()
@@ -186,6 +195,7 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
 
 def write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new, ref_spk_baseline, ref_spk_study,
                  ref_spk_exp_old, ref_spk_exp_new):
+    """ Writes all cross-correlation histograms to CCG file """
     fmt = [{'ID' : 'CH', 'DS' : 'Cross-Correlation Histogram'}, 
            {'ID' : 'RS', 'DS' : 'Number of spikes in reference spike train'}]
     col_names = ['REFARE', 'REFTET', 'REFNEUR', 'TARARE', 'TARTET', 'TARNEUR', 'FORMAT', 'BASE', 'STUDY', 'EXPOLD', 'EXPNEW']

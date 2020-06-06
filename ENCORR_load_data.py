@@ -5,7 +5,7 @@ from scipy.io import loadmat
 import pandas as pd
 
 class Parameters:
-    # Conatins all parameters of the experiment
+    """ Conatins all parameters of the experiment """
     def __init__(self, tetrodes, labels, ts_resp_exp, ts_resp_exp_new, ts_resp_exp_old, ts_stim_study, ts_stim_exp_old, ts_stim_exp_new, 
                  ts_stim_exp, cut_time_before_stim, cut_time_after_stim, ts_rndm_baseline):
         self.tetrodes = tetrodes  # list of brain regions associated whith each tetrode
@@ -23,6 +23,8 @@ class Parameters:
 
 
 def random_sample_baseline_ts(baseline_end_ts, cut_time_before_stim, cut_time_after_stim):
+    """ Picks 10 random timepoints between 0 and the end of baseline period. The minimum interval between these
+    timepoints is governed by cut_time_after_stim and cut_time_before_stim """
     baseline_ts = [np.random.randint(0,baseline_end_ts)]
     while len(baseline_ts) <= 10:
         rndm = np.random.randint(0,baseline_end_ts) 
@@ -36,25 +38,8 @@ def random_sample_baseline_ts(baseline_end_ts, cut_time_before_stim, cut_time_af
 
 
 def loadparams(params_mat, cut_time_before_stim, cut_time_after_stim, baseline_end_time):
+    """ Loads parameters from .MAT file and creates instance of class Parameters """
     param = loadmat(params_mat)
-
-    # LE46
-    # tetrodes = np.array([tet[0] for tet in param['tet_list'][0]]) 
-    # labels = np.array([label[0] for label in param['label_oldnew']])
-    # stim_study = np.array([stim[0] for stim in param['stim_list_study']]) 
-    # stim_exp =  param['stim_list_exp'][0] 
-    # stim_exp_new = stim_exp[np.where(labels == 1)] 
-    # stim_exp_old = stim_exp[np.where(labels == 0)] 
-    # ts_resp_exp = param['ts_response_video'][:,3]*1000
-    # ts_resp_exp_new = ts_resp_exp[np.where(labels == 1)] 
-    # ts_resp_exp_old = ts_resp_exp[np.where(labels == 0)] 
-    # ts_stim_all = param['ts_stimon'][0]
-    # ts_stim_study = ts_stim_all[0:10]
-    # ts_stim_exp = param['ts_stimon_exp_video'][:,3]
-    # ts_stim_exp_new = ts_stim_exp[np.where(labels == 1)] 
-    # ts_stim_exp_old = ts_stim_exp[np.where(labels == 0)] 
-    # ts_rndm_baseline = random_sample_baseline_ts(baseline_end_time, cut_time_before_stim, cut_time_after_stim)
-    
     tetrodes = np.array([tet[0] for tet in param['tet_list'][0]]) 
     labels = np.array(param['label_oldnew'][0])
     ts_resp_exp = param['ts_response_video'][:,0]
@@ -71,11 +56,14 @@ def loadparams(params_mat, cut_time_before_stim, cut_time_after_stim, baseline_e
 
 
 def loadtet(tet_mat_file, sampling_rate):
+    """ Loads spike time information for a whole tetrode from .MAT file and normalises the 
+    timestamps by dividing by the sampling rate """
     tet_mat = loadmat(tet_mat_file)
     tet = [np.rint(neuron[:,0]).astype(int) for neuron in tet_mat['spikes']['spktimes'][0][0][0] / sampling_rate] # first round to nearest int then convert to int 
     return tet
 
 def load_tet_info(tet_info_mat):
+    """ Loads tet_info .MAT file """
     tet_info = loadmat(tet_info_mat)
     areas = [area_array[0] for area_array in tet_info['tet_info'][0]]
     neur_counts = [neur_array[0][0] for neur_array in tet_info['tet_info'][1]]
