@@ -31,7 +31,7 @@ class CorrelationHeader:
         self.cut_time_before_stim = cut_time_before_stim
         self.cut_time_after_stim = cut_time_after_stim
         self.binsize = binsize
-        self.windowsize = windowsize
+        self.windowsize = windowsize // binsize
         self.border_correction = border_correction
         self.format = fmt
         self.col_names = col_names
