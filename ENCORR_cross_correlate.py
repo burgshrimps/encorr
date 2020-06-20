@@ -76,6 +76,7 @@ class CorrelationFile:
                         binsize = int(line_splitted[1])
                     elif line_splitted[0][2:] == 'windowsize':
                         windowsize = int(line_splitted[1])
+                        print(windowsize)
                     elif line_splitted[0][2:] == 'border_correction':
                         border_correction = eval(line_splitted[1])
                     elif line_splitted[0][2:] == 'FORMAT':
