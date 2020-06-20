@@ -42,13 +42,11 @@ def loadparams(params_mat, cut_time_before_stim, cut_time_after_stim, baseline_e
     param = loadmat(params_mat)
     tetrodes = np.array([tet[0] for tet in param['tet_list'][0]]) 
     labels = np.array(param['label_oldnew'][0])
-    ts_resp_exp = np.array([ts * 1000 for ts in param['ts_response_video'][:,0]])
-    print(ts_resp_exp)
-    print(np.where(labels == 1)[0])
+    ts_resp_exp = param['ts_response_video'][:,0] * 1000
     ts_resp_exp_new = ts_resp_exp[np.where(labels == 1)] 
     ts_resp_exp_old = ts_resp_exp[np.where(labels == 0)] 
-    ts_stim_study = [ts * 1000 for ts in param['ts_stimon_study'][:,0]]
-    ts_stim_exp = [ts * 1000 for ts in param['ts_stimon_exp'][:,0]]
+    ts_stim_study = param['ts_stimon_study'][:,0] * 1000
+    ts_stim_exp = param['ts_stimon_exp'][:,0] * 1000
     ts_stim_exp_new = ts_stim_exp[np.where(labels == 1)] 
     ts_stim_exp_old = ts_stim_exp[np.where(labels == 0)] 
     ts_rndm_baseline = random_sample_baseline_ts(baseline_end_time, cut_time_before_stim, cut_time_after_stim)
