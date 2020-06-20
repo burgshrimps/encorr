@@ -172,6 +172,7 @@ def main():
         logging.info('WORKDIR: {0}'.format(options.workdir))
 
         ccg_in = CorrelationFile(options.ccg, 'r')
+        print(ccg_in.header.windowsize, ccg_in.header.binsize)
         ccf_in = ConnectionFile(options.ccf, 'r')
 
         logging.info('# Fetch CCF records')
