@@ -10,7 +10,7 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
                 corr_rec.tar_tet) + ' (' + corr_rec.tar_area + ')\nNeurons: [' + str(corr_rec.ref_neur) + ', ' + str(
                 corr_rec.tar_neur) + ']')
 
-    f.text(0.5, 0.04, 'time lag in ' + str(ccg_header.binsize) + (' ms bins'), ha='center')
+    f.text(0.5, 0.04, 'time lag in ' + str(ccg_header.binsize) + (' us bins'), ha='center')
     f.text(0.08, 0.5, 'Firing probability', va='center', rotation=('vertical'))
 
     titles = ['Baseline', 'Study Phase', 'Test Phase Old Odors', 'Test Phase New Odors']
