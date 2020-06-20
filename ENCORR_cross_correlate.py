@@ -31,7 +31,7 @@ class CorrelationHeader:
         self.cut_time_before_stim = cut_time_before_stim
         self.cut_time_after_stim = cut_time_after_stim
         self.binsize = binsize
-        self.windowsize = windowsize // binsize
+        self.windowsize = windowsize 
         self.border_correction = border_correction
         self.format = fmt
         self.col_names = col_names
@@ -111,7 +111,7 @@ class CorrelationFile:
         self.f.write('##cut_time_before_stim={0}\n'.format(self.header.cut_time_before_stim))
         self.f.write('##cut_time_after_stim={0}\n'.format(self.header.cut_time_after_stim))
         self.f.write('##binsize={0}\n'.format(self.header.binsize))
-        self.f.write('##windowsize={0}\n'.format(self.header.windowsize))
+        self.f.write('##windowsize={0}\n'.format(self.header.windowsize // self.header.binsize))
         self.f.write('##border_correction={0}\n'.format(self.header.border_correction))
         for fmt in self.header.format:
             self.f.write('##FORMAT=<ID={0},Description="{1}">\n'.format(fmt['ID'], fmt['DS']))
