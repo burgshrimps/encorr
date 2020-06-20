@@ -5,10 +5,7 @@ load_neurons <- function(dataset) {
   neurons <- read.csv(paste(dataset, '_neurons.csv', sep=''), header=TRUE, sep=',', dec='.', check.names=FALSE)
   
   # For now filter out neurons with area labels 'cortex' and 'x'
-  neurons <- neurons[neurons$area != 'cortex' & neurons$area != 'x', ]  
-  
-  # Rename areas labels 'pCA3x' to 'pCA3'
-  neurons[neurons == 'pCA3x'] <- 'pCA3'
+  neurons <- neurons[neurons$area != 'X', ]  
   
   return(neurons)
 }
@@ -26,9 +23,9 @@ load_neurons_effective <- function(filename) {
 reorder_neurons_for_circ <- function(neurons) {
   ### Change order of neurons in regards to the order they appear in the network plot based on brain area ###
   
-  neurons$area <- factor(neurons$area, levels = c('sub', 'dCA1', 'CA1b', 'pCA1b', 'pCA1', 'dCA3', 'pCA3'))
+  neurons$area <- factor(neurons$area, levels = c('CA1-1', 'CA1-2', 'CA1-3', 'CA1-4', 'CA1-5', 'CA3-5', 'CA3-4', 'CA3-3', 'CA3-2', 'CA3-1'))
   neurons$area.num <- as.numeric(neurons$area)
-  neurons <- neurons[order(neurons$area.num), ]
+  neurons <- neurons[rev(order(neurons$area.num)), ]
   
   return(neurons)
 }
@@ -93,7 +90,7 @@ plot_circ <- function(neurons, areas, phase, title, dataset, shift, v_size, v_la
   V(net)$size <- v_size
   
   # Define color scheme for vertices and edges
-  v_color <- c('yellow', 'red', 'greenyellow', 'greenyellow', 'green', 'cyan', 'orange') 
+  v_color <- c('lightpink' ,'indianred1', 'red', 'firebrick3', 'darkred', 'navyblue', 'royalblue3', 'steelblue3', 'dodgerblue','deepskyblue') 
   e_color <- c('red', 'blue')
   V(net)$color <- v_color[V(net)$area.num]
   E(net)$color <- e_color[E(net)$type.num]
@@ -117,14 +114,18 @@ plot_circ <- function(neurons, areas, phase, title, dataset, shift, v_size, v_la
 compute_anatomical_layout <- function(net, neurons_effective, center, r) {
   ### Computes the coordinates of each vertix based on their corresponding brain area ###
   
+  
   l <- layout_randomly(net)
-  l[neurons_effective$area == 'dCA1', ] <- compute_coords_around_circle(center, center, r, length(l[neurons_effective$area == 'dCA1', 1]))
-  l[neurons_effective$area == 'dCA3', ] <- compute_coords_around_circle(-center, -center, r, length(l[neurons_effective$area == 'dCA3', 1]))
-  l[neurons_effective$area == 'pCA3', ] <- compute_coords_around_circle(center, -center, r, length(l[neurons_effective$area == 'pCA3', 1]))
-  l[neurons_effective$area == 'pCA1', ] <- compute_coords_around_circle(-center, center, r, length(l[neurons_effective$area == 'pCA1', 1]))
-  l[neurons_effective$area == 'sub', ] <- compute_coords_around_circle(center, 0, r, length(l[neurons_effective$area == 'sub', 1]))
-  l[neurons_effective$area == 'CA1b', ] <- compute_coords_around_circle(0, center, r, length(l[neurons_effective$area == 'CA1b', 1]))
-  l[neurons_effective$area == 'pCA1b', ] <- compute_coords_around_circle(-center+1, center-1, r, length(l[neurons_effective$area == 'pCA1b', 1]))
+  l[neurons_effective$area == 'CA1-1', ] <- compute_coords_around_circle(-8, 5, 1, length(l[neurons_effective$area == 'CA1-1', 1]))
+  l[neurons_effective$area == 'CA1-2', ] <- compute_coords_around_circle(-4, 5, 1, length(l[neurons_effective$area == 'CA1-2', 1]))
+  l[neurons_effective$area == 'CA1-3', ] <- compute_coords_around_circle(0, 5, 1, length(l[neurons_effective$area == 'CA1-3', 1]))
+  l[neurons_effective$area == 'CA1-4', ] <- compute_coords_around_circle(4, 5, 1, length(l[neurons_effective$area == 'CA1-4', 1]))
+  l[neurons_effective$area == 'CA1-5', ] <- compute_coords_around_circle(8, 5, 1, length(l[neurons_effective$area == 'CA1-5', 1]))
+  l[neurons_effective$area == 'CA3-5', ] <- compute_coords_around_circle(8, -5, 1, length(l[neurons_effective$area == 'CA3-5', 1]))
+  l[neurons_effective$area == 'CA3-4', ] <- compute_coords_around_circle(4, -5, 1, length(l[neurons_effective$area == 'CA3-4', 1]))
+  l[neurons_effective$area == 'CA3-3', ] <- compute_coords_around_circle(0, -5, 1, length(l[neurons_effective$area == 'CA3-3', 1]))
+  l[neurons_effective$area == 'CA3-2', ] <- compute_coords_around_circle(-4, -5, 1, length(l[neurons_effective$area == 'CA3-2', 1]))
+  l[neurons_effective$area == 'CA3-1', ] <- compute_coords_around_circle(-8, -5, 1, length(l[neurons_effective$area == 'CA3-1', 1]))
   
   return(l)
 }
@@ -137,7 +138,7 @@ plot_anatomical <- function(neurons_effective, phase_effective, center, radius, 
   l <- compute_anatomical_layout(net, neurons_effective, center, radius)
   
   # Set color scheme
-  v_color <- c('yellow', 'red', 'greenyellow', 'greenyellow', 'green', 'cyan', 'orange') 
+  v_color <- c('lightpink' ,'indianred1', 'red', 'firebrick3', 'darkred', 'navyblue', 'royalblue3', 'steelblue3', 'dodgerblue','deepskyblue') 
   e_color <- c('red', 'blue')
   V(net)$color <- v_color[V(net)$area.num]
   E(net)$color <- e_color[E(net)$type.num]
@@ -146,14 +147,14 @@ plot_anatomical <- function(neurons_effective, phase_effective, center, radius, 
   pdf(paste(dataset, '_network_', title, '_effective_anatomical', '.pdf', sep=''))
   plot(net, layout=l)
   title(paste(dataset, ' ', title, sep=''))
-  legend("bottom", legend=areas_effective, col=v_color[unique(neurons_effective$area.num)], pch=21, pt.bg=v_color[unique(neurons_effective$area.num)])
+  legend("topright", legend=areas_effective, col=v_color[unique(neurons_effective$area.num)], pch=21, pt.bg=v_color[unique(neurons_effective$area.num)])
   dev.off()
 }
 
 
 # Set dataset parameters
-animal <- 'LE84'
-date <- '20190712'
+animal <- 'LE87'
+date <- '20190520'
 dir <- '/Users/burgshrimps/Documents/lin/analysis/XCORR/'
 dataset <- paste(animal, date, sep='_')
 wd <- paste(dir, animal, '/', date, '/conn_stat', sep='')
@@ -161,7 +162,7 @@ setwd(wd)
 
 
 # Set parameters for circular plot
-shift <- 10
+shift <- 45
 v_size <- 5
 v_label_size <- 0.4
 
@@ -175,8 +176,10 @@ radius <- 1
 library(plyr)
 neurons <- load_neurons(dataset)
 neurons_ordered_circ <- reorder_neurons_for_circ(neurons)
+print(neurons_ordered_circ)
 effective_neurons_names <- load_neurons_effective(paste(dir, 'effective_neurons.csv', sep=''))
-areas <- unique(neurons$area)
+areas <- unique(neurons_ordered_circ$area)
+print(areas)
 
 
 # Load phase connections
@@ -192,6 +195,7 @@ plot_circ(neurons_ordered_circ, areas, baseline, 'baseline', dataset, shift, v_s
 plot_circ(neurons_ordered_circ, areas, study, 'study', dataset, shift, v_size, v_label_size)
 plot_circ(neurons_ordered_circ, areas, exp_old, 'exp_old', dataset, shift, v_size, v_label_size)
 plot_circ(neurons_ordered_circ, areas, exp_new, 'exp_new', dataset, shift, v_size, v_label_size)
+
 
 
 # Filter only effective neurons and connections

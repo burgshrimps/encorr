@@ -146,8 +146,8 @@ class CorrelationFile:
 def list2neo(st1, st2):
     """ Converts two lists of spike times into neo.Spiketrain objects. """
     t_stop = max(max(st1), max(st2)) + 1
-    neo_st1 = neo.core.SpikeTrain(st1*pq.ms, t_stop=t_stop)
-    neo_st2 = neo.core.SpikeTrain(st2*pq.ms, t_stop=t_stop)
+    neo_st1 = neo.core.SpikeTrain(st1*pq.us, t_stop=t_stop)
+    neo_st2 = neo.core.SpikeTrain(st2*pq.us, t_stop=t_stop)
     return neo_st1, neo_st2
 
 
@@ -157,8 +157,8 @@ def cch(st1, st2, binsize, windowsize, border_correction):
                              # should have the same t_stop but sometimes a
                              # rounding error occured resulting in the two
                              # floating point numbers not being the same
-    st1_binned = eph.conversion.BinnedSpikeTrain(st1, binsize=binsize * pq.ms)
-    st2_binned = eph.conversion.BinnedSpikeTrain(st2, binsize=binsize * pq.ms)
+    st1_binned = eph.conversion.BinnedSpikeTrain(st1, binsize=binsize * pq.us)
+    st2_binned = eph.conversion.BinnedSpikeTrain(st2, binsize=binsize * pq.us)
     cch_object = eph.spike_train_correlation.cross_correlation_histogram(
         st1_binned, st2_binned, window=[-windowsize, windowsize],
         border_correction=border_correction, binary=False, kernel=None, method='speed')

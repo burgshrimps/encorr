@@ -27,35 +27,35 @@ def parse_arguments(arguments = sys.argv[1:]):
                                      help='ID of target tetrode.')                            
       parser_correlate.add_argument('sampling_rate',
                                      type=float,
-                                     help='Sampling rate of electrophysiology recording system.')
+                                     help='Sampling rate in [kHz] of electrophysiology recording system.')
       parser_correlate.add_argument('outfile',
                                      type=str,
                                      help='Output .ccg file.')
       parser_correlate.add_argument('--cut_time_before_stim',
                                      metavar='INT',
                                      type=int,
-                                     default=200,
-                                     help='Time in [ms] before stimulus presentation timestamp = start time of each spiketrain of interest.')
+                                     default=200000,
+                                     help='Time in [us] before stimulus presentation timestamp = start time of each spiketrain of interest.')
       parser_correlate.add_argument('--cut_time_after_stim',
                                      metavar='INT',
                                      type=int,
-                                     default=6000,
-                                     help='Time in [ms] after stimulus presentation timestamp = end time of each spiketrain of interest.')
+                                     default=6000000,
+                                     help='Time in [us] after stimulus presentation timestamp = end time of each spiketrain of interest.')
       parser_correlate.add_argument('--baseline_end_time',
                                      metavar='INT',
                                      type=int,
-                                     default=300000,
-                                     help='Time in [ms] before experiment starts. Used to randomly sample baseline STOIs.')
+                                     default=300000000,
+                                     help='Time in [us] before experiment starts. Used to randomly sample baseline STOIs.')
       parser_correlate.add_argument('--binsize',
                                      metavar='INT',
                                      type=int,
-                                     default=1,
-                                     help='Size of bins in [ms] for binning the spiketimes during cross-correlation analysis.')
+                                     default=1000,
+                                     help='Size of bins in [us] for binning the spiketimes during cross-correlation analysis.')
       parser_correlate.add_argument('--windowsize',
                                      metavar='INT',
                                      type=int,
-                                     default=50,
-                                     help='Size of shifting window in [ms] for cross-correlation analysis.')
+                                     default=50000,
+                                     help='Size of shifting window in [us] for cross-correlation analysis.')
       parser_correlate.add_argument('--border_correction',
                                      metavar='BOOL',
                                      type=bool,
