@@ -15,8 +15,6 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
 
     titles = ['Baseline', 'Study Phase', 'Test Phase Old Odors', 'Test Phase New Odors']
     bins = np.array(range(-ccg_header.windowsize, ccg_header.windowsize + 1))
-    print(ccg_header.windowsize)
-    print(bins)
     rects = [[], [], [], []]
     for i in range(len(titles)):
         axarr[i].set_title(titles[i])
