@@ -17,7 +17,7 @@ from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, wri
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
 from ENCORR_corr_stat import plot_stat_intensity, plot_stat_bin
 from ENCORR_correlogram import plot_cch
-from ENCORR_conn_stat import corr_matrix_from_ccf, to_matlab, count_conn_per_area, to_csv, plot_heatmaps, plot_pca
+from ENCORR_conn_stat import corr_matrix_from_ccf, to_matlab, count_conn_per_area, to_csv, plot_heatmaps, plot_pca, create_summary_csv
 
 
 
@@ -172,7 +172,6 @@ def main():
         logging.info('WORKDIR: {0}'.format(options.workdir))
 
         ccg_in = CorrelationFile(options.ccg, 'r')
-        print(ccg_in.header.windowsize, ccg_in.header.binsize)
         ccf_in = ConnectionFile(options.ccf, 'r')
 
         logging.info('# Fetch CCF records')
@@ -204,13 +203,15 @@ def main():
     
     if options.sub == 'conn-stat':
         logging.info('MODE: conn-stat')
-        logging.info('INPUT DIR: {0}'.format(options.input_dir))
+        logging.info('CCG INPUT DIR: {0}'.format(options.ccg_input_dir))
+        logging.info('CCF INPUT DIR: {0}'.format(options.ccf_input_dir))
         logging.info('TET INFO MAT: {0}'.format(options.tet_info))
         logging.info('OUT ROOT: {0}'.format(options.out_root))
         
+        """
         logging.info('Compute connection counts')
         tet_info = load_tet_info(options.tet_info)
-        corr_matrix, neur_count_cum = corr_matrix_from_ccf(options.input_dir, tet_info)
+        corr_matrix, neur_count_cum = corr_matrix_from_ccf(options.ccf_input_dir, tet_info)
         counts, npairs = count_conn_per_area(corr_matrix, tet_info, neur_count_cum)
         to_matlab(tet_info, neur_count_cum, corr_matrix, options.out_root + '_conn_stat.mat', npairs, counts)
 
@@ -218,7 +219,9 @@ def main():
         id_to_area = to_csv(corr_matrix, tet_info, options.out_root)
         plot_heatmaps(corr_matrix, options.out_root)
         plot_pca(corr_matrix, id_to_area, options.out_root)
+        """
 
+        create_summary_csv(options.ccf_input_dir, options.ccg_input_dir, options.out_root + '_ccg_wings_stat.tsv')
 
 
 main()

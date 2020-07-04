@@ -7,8 +7,10 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 import pandas as pd
+from scipy.stats import wilcoxon, ttest_ind
 
 from ENCORR_call import ConnectionFile
+from ENCORR_cross_correlate import CorrelationFile
 
 plt.style.use('ggplot')
 
@@ -173,6 +175,61 @@ def plot_pca(corr_matrix, id_to_area, out_root):
         plt.title(phases[i])
         plt.savefig(out_root + '_pca_' + phases[i] + '.png')
         plt.close()
+
+
+def create_summary_csv(indir_ccf, indir_ccg, outfile):
+    summary = dict()
+    for file in os.listdir(indir_ccf):
+        if file.endswith('.ccf'):
+            ccf = ConnectionFile(indir_ccf + '/' + file, 'r')
+            for rec in ccf.fetch():
+                template_entry = ['ra', 'rt', 'rn', 'ta', 'tt', 'tn', '.', '.', '.', '.', 1]
+                summ_id = '_'.join([str(rec.ref_tet), str(rec.ref_neur), str(rec.tar_tet), str(rec.tar_neur)])
+                template_entry[0] = rec.ref_area
+                template_entry[1] = rec.ref_tet
+                template_entry[2] = rec.ref_neur
+                template_entry[3] = rec.tar_area
+                template_entry[4] = rec.tar_tet
+                template_entry[5] = rec.tar_neur
+                template_entry[6] = rec.phases[0][0]['TP']
+                template_entry[7] = rec.phases[1][0]['TP']
+                template_entry[8] = rec.phases[2][0]['TP']
+                template_entry[9] = rec.phases[3][0]['TP']
+                summary[summ_id] = template_entry
+
+    for file in os.listdir(indir_ccg):
+        if file.endswith('.ccg'):
+            ccg = CorrelationFile(indir_ccg + '/' + file, 'r')
+            num_bins = 2 * ccg.header.windowsize // ccg.header.binsize
+            wing_cut = int(0.2 * num_bins)
+            for rec in ccg.fetch():
+                if rec.phases[0]['RS'] != 0:
+                    base = np.concatenate((rec.phases[0]['CH'][:wing_cut],rec.phases[0]['CH'][-wing_cut:])) / rec.phases[0]['RS']
+                else:
+                    base = np.concatenate((rec.phases[0]['CH'][:wing_cut],rec.phases[0]['CH'][-wing_cut:]))
+                if rec.phases[2]['RS'] != 0:
+                    exp_old = np.concatenate((rec.phases[2]['CH'][:wing_cut],rec.phases[2]['CH'][-wing_cut:])) / rec.phases[2]['RS']
+                else:
+                    exp_old = np.concatenate((rec.phases[2]['CH'][:wing_cut],rec.phases[2]['CH'][-wing_cut:]))
+                if rec.phases[3]['RS'] != 0:
+                    exp_new = np.concatenate((rec.phases[3]['CH'][:wing_cut],rec.phases[3]['CH'][-wing_cut:])) / rec.phases[3]['RS']
+                else:
+                    exp_new = np.concatenate((rec.phases[3]['CH'][:wing_cut],rec.phases[3]['CH'][-wing_cut:]))
+
+                exp_total = (exp_old + exp_new) / 2
+                _, p = ttest_ind(base, exp_total)
+                summ_id = '_'.join([str(rec.ref_tet), str(rec.ref_neur), str(rec.tar_tet), str(rec.tar_neur)])
+                summary[summ_id][10] = p
+    
+    df = pd.DataFrame.from_dict(summary, orient='index')
+    df.columns = ['ref_area', 'ref_tet', 'ref_neuron', 'tar_area', 'tar_tet', 'tar_neuron', 'baseline', 'study', 'exp_old', 'exp_new', 'wings_p_val']
+    df = df[(df['baseline'] !=  '.') | (df['study'] !=  '.') | (df['exp_old'] !=  '.') | (df['exp_new'] !=  '.')]
+    df.to_csv(outfile, index=False, na_rep='NA', sep='\t')
+
+
+
+
+
 
 
 

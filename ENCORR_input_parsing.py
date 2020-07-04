@@ -124,9 +124,12 @@ def parse_arguments(arguments = sys.argv[1:]):
       parser_heatmap = subparsers.add_parser('conn-stat',
                                              help='Construct a .mat file containing a field for each neuron with correlations to all other neurons \
                                                    and connection counts per area.')
-      parser_heatmap.add_argument('input_dir',
+      parser_heatmap.add_argument('ccg_input_dir',
                                   type=str,
                                   help='Directory containing CCF files.')
+      parser_heatmap.add_argument('ccf_input_dir',
+                                  type=str,
+                                  help='Directory containing CCG files.')
       parser_heatmap.add_argument('tet_info',
                                   type=str,
                                   help='MAT file containing tetrode information.')

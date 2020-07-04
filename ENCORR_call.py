@@ -171,6 +171,7 @@ def call_peaks(cch_all_phases, peak_candidates, min_num_spikes, center):
             if candidate[1] < center_start or candidate[1] > center_end:
                 phase_with_peaks_out_center.add(candidate[0])
 
+
     bins_with_peaks_final = []
     for peak_bin in bins_with_peaks:
         if peak_bin[0] not in phase_with_peaks_out_center:
@@ -223,6 +224,9 @@ def create_phase_records(cch_all_phases_norm, peak_indices, trough_indices):
                                 'IN' : np.round(-(chance_firing_prob - cch_all_phases_norm[tidx]), 3)})
 
     return phases
+
+
+
 
 
         
