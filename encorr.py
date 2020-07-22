@@ -208,7 +208,6 @@ def main():
         logging.info('TET INFO MAT: {0}'.format(options.tet_info))
         logging.info('OUT ROOT: {0}'.format(options.out_root))
         
-        """
         logging.info('Compute connection counts')
         tet_info = load_tet_info(options.tet_info)
         corr_matrix, neur_count_cum = corr_matrix_from_ccf(options.ccf_input_dir, tet_info)
@@ -219,8 +218,7 @@ def main():
         id_to_area = to_csv(corr_matrix, tet_info, options.out_root)
         plot_heatmaps(corr_matrix, options.out_root)
         plot_pca(corr_matrix, id_to_area, options.out_root)
-        """
-
+        
         create_summary_csv(options.ccf_input_dir, options.ccg_input_dir, options.out_root + '_ccg_wings_stat.tsv')
 
 
