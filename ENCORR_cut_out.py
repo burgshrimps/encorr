@@ -21,6 +21,7 @@ def cut_out(spiketrain, pre_start_time, post_end_time, stim_ts):
 def get_stoi(tet, P, phase):
     """ Iterates over all neurons in one tetrode and cuts out STOIs. """
     stoi_spktimes_tet = []
+    num_spikes_tet = []
     if phase == 'baseline':
         for neuron in tet:
             stoi_spktimes_neuron = []
@@ -36,19 +37,21 @@ def get_stoi(tet, P, phase):
             stoi_spktimes_tet.append(stoi_spktimes_neuron)
 
     elif phase == 'exp_old':
-        k = 1
         for neuron in tet:
             stoi_spktimes_neuron = []
+            num_spikes_neuron = []
             for i in range(10):
                 stoi_spktimes_neuron.append(cut_out(neuron, P.cut_time_before_stim, P.cut_time_after_stim, P.ts_stim_exp_old[i]))
-            k += 1
             stoi_spktimes_tet.append(stoi_spktimes_neuron)
 
     elif phase == 'exp_new':
         for neuron in tet:
             stoi_spktimes_neuron = []
+            num_spikes_neuron = []
             for i in range(10):
-                stoi_spktimes_neuron.append(cut_out(neuron, P.cut_time_before_stim, P.cut_time_after_stim, P.ts_stim_exp_new[i]))
+                stoi = cut_out(neuron, P.cut_time_before_stim, P.cut_time_after_stim, P.ts_stim_exp_new[i])
+                stoi_spktimes_neuron.append(stoi)
+                print(len(stoi))
             stoi_spktimes_tet.append(stoi_spktimes_neuron)
 
     return stoi_spktimes_tet
