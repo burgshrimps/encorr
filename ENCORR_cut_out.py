@@ -47,12 +47,13 @@ def get_stoi(tet, P, phase):
     elif phase == 'exp_new':
         for neuron in tet:
             stoi_spktimes_neuron = []
-            num_spikes_neuron = []
+            num_spikes_neuron = 0
             for i in range(10):
                 stoi = cut_out(neuron, P.cut_time_before_stim, P.cut_time_after_stim, P.ts_stim_exp_new[i])
                 stoi_spktimes_neuron.append(stoi)
-                print(len(stoi))
+                num_spikes_neuron + len(stoi)
             stoi_spktimes_tet.append(stoi_spktimes_neuron)
+            print(num_spikes_neuron)
 
     return stoi_spktimes_tet
 
