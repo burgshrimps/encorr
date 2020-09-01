@@ -6,9 +6,12 @@
 import logging
 import sys
 import os
+import glob
 import numpy as np 
 import pickle
 import pandas as pd
+import matplotlib.pyplot as plt 
+import seaborn as sns
 
 from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet, load_tet_info
@@ -42,6 +45,50 @@ def main():
     for arg in vars(options):
         logging.info('PARAMETER: {0}, VALUE: {1}'.format(arg, getattr(options, arg)))
 
+    if options.sub == 'explore':
+        P = loadparams(options.params_mat, options.cut_time_before_stim, options.cut_time_after_stim, 
+                       options.baseline_end_time)
+        tet_list = glob.glob(options.tet_dir + '/*tet[0-9]*.mat')
+        tet_list.sort()
+        df = pd.DataFrame()
+        i = 0
+        axs_idx = [(i,j) for i in range(4) for j in range(4)]
+        fig, axs = plt.subplots(4,4, sharex=True, figsize=(20,10))
+        for tet_fname in tet_list:
+            tet_id = tet_fname[-6:-4] if tet_fname[-6] != 't' else tet_fname[-5:-4] 
+            print(tet_id)
+            tet = loadtet(tet_fname, options.sampling_rate)
+            _, num_spikes_baseline = get_stoi(tet, P, 'baseline')
+            _, num_spikes_study = get_stoi(tet, P, 'study')
+            _, num_spikes_exp_old = get_stoi(tet, P, 'exp_old')
+            _, num_spikes_exp_new = get_stoi(tet, P, 'exp_new')
+
+            df_baseline = pd.DataFrame(num_spikes_baseline)
+            df_baseline['phase'] = 'baseline'
+            df_baseline['tet'] = i
+            df_study = pd.DataFrame(num_spikes_study)
+            df_study['phase'] = 'study'
+            df_study['tet'] = i
+            df_exp_old = pd.DataFrame(num_spikes_exp_old)
+            df_exp_old['phase'] = 'exp_old'
+            df_exp_old['tet'] = i
+            df_exp_new= pd.DataFrame(num_spikes_exp_new)
+            df_exp_new['phase'] = 'exp_new'
+            df_exp_new['tet'] = i
+
+            df = df_baseline.append([df_study, df_exp_old, df_exp_new], ignore_index=True)
+            
+            df = df.rename(columns={0 : 'num_spikes'})
+            sns.boxplot(x='phase', y='num_spikes', data=df, showfliers = False, ax=axs[axs_idx[i]])
+            axs[axs_idx[i]].set_ylabel('')    
+            axs[axs_idx[i]].set_xlabel('')
+            axs[axs_idx[i]].set_title('Tetrode ' + str(tet_id))
+            i += 1
+        fig.text(0.5, 0.04, 'Phase', ha='center', va='center', fontsize=18)
+        fig.text(0.06, 0.5, 'Number of  Spikes in STOIs', ha='center', va='center', rotation='vertical', fontsize=18)
+        plt.suptitle(options.name, fontsize=22)
+        plt.savefig(options.outfile)
+
     if options.sub == 'correlate':
         logging.info('MODE: correlate')
         logging.info('REFERENCE TETRODE: {0}'.format(options.ref_mat))
@@ -66,14 +113,14 @@ def main():
         tar_tet = loadtet(options.tar_mat, options.sampling_rate)
 
         logging.info('# Cut out spiketrains of interest')
-        ref_spiketimes_baseline = get_stoi(ref_tet, P, 'baseline')#[:4]
-        ref_spiketimes_study = get_stoi(ref_tet, P, 'study')#[:4]
-        ref_spiketimes_exp_old = get_stoi(ref_tet, P, 'exp_old')#[:4]
-        ref_spiketimes_exp_new = get_stoi(ref_tet, P, 'exp_new')#[:4]
-        tar_spiketimes_baseline = get_stoi(tar_tet, P, 'baseline')#[:4]
-        tar_spiketimes_study = get_stoi(tar_tet, P, 'study')#[:4]
-        tar_spiketimes_exp_old = get_stoi(tar_tet, P, 'exp_old')#[:4]
-        tar_spiketimes_exp_new = get_stoi(tar_tet, P, 'exp_new')#[:4]
+        ref_spiketimes_baseline, _ = get_stoi(ref_tet, P, 'baseline')
+        ref_spiketimes_study, _ = get_stoi(ref_tet, P, 'study')
+        ref_spiketimes_exp_old, _ = get_stoi(ref_tet, P, 'exp_old')
+        ref_spiketimes_exp_new, _ = get_stoi(ref_tet, P, 'exp_new')
+        tar_spiketimes_baseline, _ = get_stoi(tar_tet, P, 'baseline')
+        tar_spiketimes_study, _ = get_stoi(tar_tet, P, 'study')
+        tar_spiketimes_exp_old, _ = get_stoi(tar_tet, P, 'exp_old')
+        tar_spiketimes_exp_new, _ = get_stoi(tar_tet, P, 'exp_new')
 
         logging.info('# Cross-correlate spiketrains of interest')
         cch_baseline, num_ref_spikes_baseline = get_cch_for_all_neurons(options.ref_tet_id, options.tar_tet_id, ref_spiketimes_baseline, tar_spiketimes_baseline, 'baseline',

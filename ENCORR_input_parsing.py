@@ -7,6 +7,38 @@ def parse_arguments(arguments = sys.argv[1:]):
 
       subparsers = parser.add_subparsers(help='modes', dest='sub')
 
+      parser_explore = subparsers.add_parser('explore', help='Explore single tetrode mat files.')
+      parser_explore.add_argument('tet_dir',
+                                   type=str,
+                                   help='Directory containing tetrode MAT file with spiketimes.')
+      parser_explore.add_argument('params_mat',
+                                   type=str,
+                                   help='MAT file with experimental parameters.')
+      parser_explore.add_argument('sampling_rate',
+                                   type=float,
+                                   help='Sampling rate in [kHz] of electrophysiology recording system.')
+      parser_explore.add_argument('outfile',
+                                   type=str,
+                                   help='Output .png file.')
+      parser_explore.add_argument('name',
+                                   type=str,
+                                   help='Dataset name.')
+      parser_explore.add_argument('--cut_time_before_stim',
+                                   metavar='INT',
+                                   type=int,
+                                   default=200000,
+                                   help='Time in [us] before stimulus presentation timestamp = start time of each spiketrain of interest.')
+      parser_explore.add_argument('--cut_time_after_stim',
+                                   metavar='INT',
+                                   type=int,
+                                   default=6000000,
+                                   help='Time in [us] after stimulus presentation timestamp = end time of each spiketrain of interest.')
+      parser_explore.add_argument('--baseline_end_time',
+                                   metavar='INT',
+                                   type=int,
+                                   default=300000000,
+                                   help='Time in [us] before experiment starts. Used to randomly sample baseline STOIs.')
+
       parser_correlate = subparsers.add_parser('correlate',
                                                 help='Cross-correlate all neurons in the reference tetrode and all neurons in the target \
                                                       tetrode and saves cross-correlograms in .ccg file.')
