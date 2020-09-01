@@ -55,7 +55,8 @@ def main():
         axs_idx = [(i,j) for i in range(4) for j in range(4)]
         fig, axs = plt.subplots(4,4, sharex=True, figsize=(20,10))
         for tet_fname in tet_list:
-            tet_id = tet_fname[-6:-4] if tet_fname[-6] != 't' else tet_fname[-5:-4] 
+            #tet_id = tet_fname[-6:-4] if tet_fname[-6] != 't' else tet_fname[-5:-4] 
+            tet_id = tet_fname[-12]
             print(tet_id)
             tet = loadtet(tet_fname, options.sampling_rate)
             _, num_spikes_baseline = get_stoi(tet, P, 'baseline')
