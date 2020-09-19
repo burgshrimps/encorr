@@ -78,6 +78,11 @@ def parse_arguments(arguments = sys.argv[1:]):
                                      type=int,
                                      default=300000000,
                                      help='Time in [us] before experiment starts. Used to randomly sample baseline STOIs.')
+      parser_correlate.add_argument('--baseline_spk_count',
+                                     metavar='BOOL',
+                                     type=bool,
+                                     default=False,
+                                     help='Alternative method to create baseline spiketrains. Default mimics the duration test phase. This method mimics the spike count.')
       parser_correlate.add_argument('--binsize',
                                      metavar='INT',
                                      type=int,
