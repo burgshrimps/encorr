@@ -15,7 +15,7 @@ import seaborn as sns
 
 from ENCORR_input_parsing import parse_arguments
 from ENCORR_load_data import loadparams, loadtet, load_tet_info
-from ENCORR_cut_out import get_stoi
+from ENCORR_cut_out import get_stoi, get_stoi_baseline_spkcount
 from ENCORR_cross_correlate import CorrelationFile, get_cch_for_all_neurons, write_to_ccg
 from ENCORR_call import ConnectionFile, ConnectionHeader, ConnectionRecord, get_candidates, call_peaks, call_troughs, create_phase_records
 from ENCORR_corr_stat import plot_stat_intensity, plot_stat_bin
@@ -55,9 +55,8 @@ def main():
         axs_idx = [(i,j) for i in range(4) for j in range(4)]
         fig, axs = plt.subplots(4,4, sharex=True, figsize=(20,10))
         for tet_fname in tet_list:
-            #tet_id = tet_fname[-6:-4] if tet_fname[-6] != 't' else tet_fname[-5:-4] 
-            tet_id = tet_fname[-12]
-            print(tet_id)
+            tet_id = tet_fname[-6:-4] if tet_fname[-6] != 't' else tet_fname[-5:-4] # all samples except LE46
+            #tet_id = tet_fname[-12] use for LE46
             tet = loadtet(tet_fname, options.sampling_rate)
             _, num_spikes_baseline = get_stoi(tet, P, 'baseline')
             _, num_spikes_study = get_stoi(tet, P, 'study')
@@ -114,15 +113,19 @@ def main():
         tar_tet = loadtet(options.tar_mat, options.sampling_rate)
 
         logging.info('# Cut out spiketrains of interest')
-        ref_spiketimes_baseline, _ = get_stoi(ref_tet, P, 'baseline')
-        ref_spiketimes_study, _ = get_stoi(ref_tet, P, 'study')
-        ref_spiketimes_exp_old, _ = get_stoi(ref_tet, P, 'exp_old')
-        ref_spiketimes_exp_new, _ = get_stoi(ref_tet, P, 'exp_new')
-        tar_spiketimes_baseline, _ = get_stoi(tar_tet, P, 'baseline')
-        tar_spiketimes_study, _ = get_stoi(tar_tet, P, 'study')
-        tar_spiketimes_exp_old, _ = get_stoi(tar_tet, P, 'exp_old')
-        tar_spiketimes_exp_new, _ = get_stoi(tar_tet, P, 'exp_new')
-
+        ref_spiketimes_study, ref_spikecount_study = get_stoi(ref_tet, P, 'study')
+        ref_spiketimes_exp_old, ref_spikecount_exp_old = get_stoi(ref_tet, P, 'exp_old')
+        ref_spiketimes_exp_new, ref_spikecount_exp_new = get_stoi(ref_tet, P, 'exp_new')
+        tar_spiketimes_study, tar_spikecount_study = get_stoi(tar_tet, P, 'study')
+        tar_spiketimes_exp_old, tar_spikecount_exp_old = get_stoi(tar_tet, P, 'exp_old')
+        tar_spiketimes_exp_new, tar_spikecount_exp_new = get_stoi(tar_tet, P, 'exp_new')
+        if not options.baseline_spk_count:
+            ref_spiketimes_baseline, _ = get_stoi(ref_tet, P, 'baseline')
+            tar_spiketimes_baseline, _ = get_stoi(tar_tet, P, 'baseline')
+        else:
+            ref_spiketimes_baseline = get_stoi_baseline_spkcount(ref_tet, P, ref_spikecount_exp_old, ref_spikecount_exp_new)
+            tar_spiketimes_baseline = get_stoi_baseline_spkcount(tar_tet, P, tar_spikecount_exp_old, tar_spikecount_exp_new)
+        
         logging.info('# Cross-correlate spiketrains of interest')
         cch_baseline, num_ref_spikes_baseline = get_cch_for_all_neurons(options.ref_tet_id, options.tar_tet_id, ref_spiketimes_baseline, tar_spiketimes_baseline, 'baseline',
                                                                         options.binsize, options.windowsize, options.border_correction)
@@ -136,6 +139,7 @@ def main():
         logging.info('# Write CCH to file')
         write_to_ccg(options, P, cch_baseline, cch_study, cch_exp_old, cch_exp_new,
                      num_ref_spikes_baseline, num_ref_spikes_study, num_ref_spikes_exp_old, num_ref_spikes_exp_new)
+       
 
     if options.sub == 'call':
         logging.info('MODE: call')
