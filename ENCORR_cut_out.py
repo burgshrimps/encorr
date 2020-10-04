@@ -85,13 +85,16 @@ def get_stoi_baseline_spkcount(tet, P, spikecount_exp_old, spikecount_exp_new):
     stoi_spktimes_tet = []
     for i, neuron in enumerate(tet):
         stoi_spktimes_neuron = []
-        baseline_end_idx = np.where(neuron < baseline_end_time)[0][-1]
-        neuron_baseline = neuron[:baseline_end_idx+1]
-        start_idx = 0
-        for j in range(10):
-            stoi = neuron_baseline[start_idx:start_idx + mean_spkcount_exp[i][j]]
-            stoi_spktimes_neuron.append(stoi)
-            start_idx = start_idx + mean_spkcount_exp[i][j]
-        stoi_spktimes_tet.append(stoi_spktimes_neuron)
+        if neuron[0] < baseline_end_time:
+            baseline_end_idx = np.where(neuron < baseline_end_time)[0][-1]
+            neuron_baseline = neuron[:baseline_end_idx+1]
+            start_idx = 0
+            for j in range(10):
+                stoi = neuron_baseline[start_idx:start_idx + mean_spkcount_exp[i][j]]
+                stoi_spktimes_neuron.append(stoi)
+                start_idx = start_idx + mean_spkcount_exp[i][j]
+            stoi_spktimes_tet.append(stoi_spktimes_neuron)
+        else:
+            stoi_spktimes_tet.append([[]] * 10)
     return stoi_spktimes_tet
 
