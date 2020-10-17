@@ -32,8 +32,8 @@ def plot_cch(corr_rec, ccg_header, conn_rec, ccf_header, workdir):
                        '--', color='limegreen', linewidth=2)
 
         y_lim = axarr[i].get_ylim()[1]
-        axarr[i].plot([-6, -6], [0, y_lim], '--', color='grey')
-        axarr[i].plot([6, 6], [0, y_lim], '--', color='grey')
+        axarr[i].plot([-ccf_header.center-1, -ccf_header.center-1], [0, y_lim], '--', color='grey')
+        axarr[i].plot([ccf_header.center+1, ccf_header.center+1], [0, y_lim], '--', color='grey')
 
         try:
             for conn in conn_rec.phases[i]:

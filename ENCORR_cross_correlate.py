@@ -179,7 +179,6 @@ def get_cch_for_all_neurons(ref_tet_id, tar_tet_id, ref_spiketimes, tar_spiketim
             logging.info('CCH @ {0}: RefNeur {1}/{2}, TarNeur {3}/{4}'.format(phase, rn+1, len(ref_spiketimes), tn+1, len(tar_spiketimes)))
             neuron_cch = np.zeros(2*windowsize+1, dtype=int)
             neuron_num_ref_spikes = 0
-
             for odor in range(len(ref_spiketimes[0])):
                 try:
                     min_spike_ts = min(ref_spiketimes[rn][odor][0], tar_spiketimes[tn][odor][0])
