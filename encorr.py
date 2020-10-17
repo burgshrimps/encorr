@@ -113,10 +113,10 @@ def main():
         tar_tet = loadtet(options.tar_mat, options.sampling_rate)
 
         logging.info('# Cut out spiketrains of interest')
-        ref_spiketimes_study, ref_spikecount_study = get_stoi(ref_tet, P, 'study')
+        ref_spiketimes_study, _ = get_stoi(ref_tet, P, 'study')
         ref_spiketimes_exp_old, ref_spikecount_exp_old = get_stoi(ref_tet, P, 'exp_old')
         ref_spiketimes_exp_new, ref_spikecount_exp_new = get_stoi(ref_tet, P, 'exp_new')
-        tar_spiketimes_study, tar_spikecount_study = get_stoi(tar_tet, P, 'study')
+        tar_spiketimes_study, _ = get_stoi(tar_tet, P, 'study')
         tar_spiketimes_exp_old, tar_spikecount_exp_old = get_stoi(tar_tet, P, 'exp_old')
         tar_spiketimes_exp_new, tar_spikecount_exp_new = get_stoi(tar_tet, P, 'exp_new')
         if not options.baseline_spk_count:
